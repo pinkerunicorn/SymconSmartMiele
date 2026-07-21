@@ -1,0 +1,12 @@
+﻿{
+    "id": "{BDF409CA-58AF-4880-8835-DA25E3F69492}",
+    "author": "Florian GraÃŸinger",
+    "name": "SymconSmartMiele",
+    "url": "https://github.com/pinkerunicorn/SymconSmartMiele",
+    "compatibility": {
+        "version": "9.0"
+    },
+    "version": "1.0",
+    "build": 0,
+    "date": 0
+}
