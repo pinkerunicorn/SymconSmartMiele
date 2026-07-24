@@ -45,7 +45,7 @@ $this->RegisterPropertyString('ClientID', '');
         }
     }
 
-    private function GetToken()
+    private function GetToken(): string|false
     {
         $token = $this->ReadAttributeString('AccessToken');
         $expires = $this->ReadAttributeInteger('TokenExpires');
@@ -172,7 +172,7 @@ $this->RegisterPropertyString('ClientID', '');
         }
     }
 
-    public function ApiGet(string $endpoint)
+    public function ApiGet(string $endpoint): array|false
     {
         $token = $this->GetToken();
         if (!$token) {

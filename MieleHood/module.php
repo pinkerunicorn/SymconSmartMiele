@@ -21,40 +21,30 @@ $this->RegisterPropertyString('DeviceID', '');
 
         
         // Variables
-        $this->RegisterVariableString('StatusText', 'Status', '', 10);
-        IPS_SetIcon($this->GetIDForIdent('StatusText'), 'Information');
-        $this->RegisterVariableBoolean('Light', 'Licht', '', 20);
-        IPS_SetIcon($this->GetIDForIdent('Light'), 'Bulb');
+        $this->RegisterVariableString('StatusText', 'Status', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Information'
+        ], 10);
+        
+        $this->RegisterVariableBoolean('Light', 'Licht', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Bulb'
+        ], 20);
         $this->EnableAction('Light');
         
-        $this->RegisterVariableInteger('VentilationStep', 'Lüfterstufe', '', 30);
-        IPS_SetIcon($this->GetIDForIdent('VentilationStep'), 'Wind');
+        $this->RegisterVariableInteger('VentilationStep', 'Lüfterstufe', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
+            'MIN' => 0.0,
+            'MAX' => 4.0,
+            'STEP' => 1.0,
+            'SUFFIX' => 'Stufe',
+            'ICON' => 'Ventilator'
+        ], 30);
         $this->EnableAction('VentilationStep');
     }
 
     public function ApplyChanges(): void{
         parent::ApplyChanges();
-
-
-        // Symcon 8 Custom Presentations
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('StatusText'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON'=> 'Information'
-        ]);
-
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('Light'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON'=> 'Bulb'
-        ]);
-
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('VentilationStep'), [
-            'PRESENTATION'=> VARIABLE_PRESENTATION_SLIDER, // Slider
-            'MIN'=> 0.0,
-            'MAX'=> 4.0,
-            'STEP'=> 1.0,
-            'SUFFIX'=> 'Stufe',
-            'ICON'=> 'Ventilator'
-        ]);
     }
 
     public function ReceiveData(string $JSONString): string
@@ -75,7 +65,7 @@ $this->RegisterPropertyString('DeviceID', '');
         return "";
     }
 
-    private function ProcessDeviceData(array $deviceData)
+    private function ProcessDeviceData(array $deviceData): void
     {
         if (isset($deviceData['state'])) {
             $state = $deviceData['state'];
@@ -97,7 +87,7 @@ $this->RegisterPropertyString('DeviceID', '');
         }
     }
 
-    public function UpdateDevice()
+    public function UpdateDevice(): void
     {
         $deviceId = $this->ReadPropertyString('DeviceID');
         if (empty($deviceId)) {
@@ -131,7 +121,7 @@ $this->RegisterPropertyString('DeviceID', '');
         $this->SLog('INFO', $text);
     }
 
-    public function RequestAction(string $Ident, $Value): void{
+    public function RequestAction(string $Ident, mixed $Value): void{
         $deviceId = $this->ReadPropertyString('DeviceID');
         if (empty($deviceId)) {
             $this->Log("Device ID not configured.");

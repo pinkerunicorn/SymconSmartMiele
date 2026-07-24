@@ -22,138 +22,94 @@ $this->RegisterPropertyString('DeviceID', '');
 
         
         // Variables
-        $this->RegisterVariableString('StatusText', 'Status', '', 10);
-        IPS_SetIcon($this->GetIDForIdent('StatusText'), 'Information');
-        $this->RegisterVariableBoolean('SignalInfo', 'Hinweis vorhanden', '', 11);
-        IPS_SetIcon($this->GetIDForIdent('SignalInfo'), 'Information');
-        $this->RegisterVariableBoolean('SignalFailure', 'Fehler erkannt', '', 12);
-        IPS_SetIcon($this->GetIDForIdent('SignalFailure'), 'Warning');
+        $this->RegisterVariableString('StatusText', 'Status', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Information'
+        ], 10);
+        $this->RegisterVariableBoolean('SignalInfo', 'Hinweis vorhanden', [
+            'ICON' => 'Information'
+        ], 11);
+        $this->RegisterVariableBoolean('SignalFailure', 'Fehler erkannt', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Alert'
+        ], 12);
         
-        $this->RegisterVariableString('ProgramName', 'Programmbezeichnung', '', 21);
-        IPS_SetIcon($this->GetIDForIdent('ProgramName'), 'Script');
-        $this->RegisterVariableString('ProgramPhaseText', 'Programm-Phase', '', 22);
-        IPS_SetIcon($this->GetIDForIdent('ProgramPhaseText'), 'Script');
+        $this->RegisterVariableString('ProgramName', 'Programmbezeichnung', [
+            'ICON' => 'Script'
+        ], 21);
+        $this->RegisterVariableString('ProgramPhaseText', 'Programm-Phase', [
+            'ICON' => 'Script'
+        ], 22);
         
-        $this->RegisterVariableInteger('StartTime', 'Start um', '', 25);
-        IPS_SetIcon($this->GetIDForIdent('StartTime'), 'Clock');
-        $this->RegisterVariableInteger('FinishTime', 'Ende um', '', 26);
-        IPS_SetIcon($this->GetIDForIdent('FinishTime'), 'Clock');
-        $this->RegisterVariableInteger('ElapsedTime', 'verstrichene Zeit', '', 27);
-        IPS_SetIcon($this->GetIDForIdent('ElapsedTime'), 'Clock');
-        $this->RegisterVariableInteger('RemainingTime', 'verbleibende Zeit', '', 28);
-        IPS_SetIcon($this->GetIDForIdent('RemainingTime'), 'Clock');
-        $this->RegisterVariableInteger('RemainingTimeSeconds', 'verbleibende Zeit (Sekunden)', '', 28);
-        IPS_SetIcon($this->GetIDForIdent('RemainingTimeSeconds'), 'Clock');
-        $this->RegisterVariableInteger('ProgressPct', 'Arbeitsfortschritt', '', 29);
-        IPS_SetIcon($this->GetIDForIdent('ProgressPct'), 'Gauge');
+        $this->RegisterVariableInteger('StartTime', 'Start um', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Clock'
+        ], 25);
+        $this->RegisterVariableInteger('FinishTime', 'Ende um', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Clock'
+        ], 26);
+        $this->RegisterVariableInteger('ElapsedTime', 'verstrichene Zeit', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'SUFFIX' => 'min',
+            'ICON' => 'Clock'
+        ], 27);
+        $this->RegisterVariableInteger('RemainingTime', 'verbleibende Zeit', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'SUFFIX' => 'min',
+            'ICON' => 'Clock'
+        ], 28);
+        $this->RegisterVariableInteger('RemainingTimeSeconds', 'verbleibende Zeit (Sekunden)', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'SUFFIX' => 's',
+            'ICON' => 'Clock'
+        ], 28);
+        $this->RegisterVariableInteger('ProgressPct', 'Arbeitsfortschritt', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'SUFFIX' => '%',
+            'ICON' => 'Intensity'
+        ], 29);
         
-        $this->RegisterVariableInteger('Temperature', 'Temperatur', '', 31);
-        IPS_SetIcon($this->GetIDForIdent('Temperature'), 'Temperature');
-        $this->RegisterVariableInteger('SpinSpeed', 'Drehzahl', '', 32);
-        IPS_SetIcon($this->GetIDForIdent('SpinSpeed'), 'Speedo');
-        $this->RegisterVariableBoolean('Door', 'Tür', '', 33);
-        IPS_SetIcon($this->GetIDForIdent('Door'), 'Window');
+        $this->RegisterVariableInteger('Temperature', 'Temperatur', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'SUFFIX' => '°C',
+            'ICON' => 'Temperature'
+        ], 31);
+        $this->RegisterVariableInteger('SpinSpeed', 'Drehzahl', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'SUFFIX' => 'U/min',
+            'ICON' => 'Motion'
+        ], 32);
+        $this->RegisterVariableBoolean('Door', 'Tür', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Window'
+        ], 33);
         
-        $this->RegisterVariableInteger('TwinDos1', 'TwinDos 1 Füllstand', '', 40);
-        IPS_SetIcon($this->GetIDForIdent('TwinDos1'), 'Drops');
-        $this->RegisterVariableInteger('TwinDos2', 'TwinDos 2 Füllstand', '', 45);
-        IPS_SetIcon($this->GetIDForIdent('TwinDos2'), 'Drops');
+        $this->RegisterVariableInteger('TwinDos1', 'TwinDos 1 Füllstand', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'SUFFIX' => '%',
+            'ICON' => 'Drop'
+        ], 40);
+        $this->RegisterVariableInteger('TwinDos2', 'TwinDos 2 Füllstand', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'SUFFIX' => '%',
+            'ICON' => 'Drop'
+        ], 45);
         
-        $this->RegisterVariableFloat('CurrentWaterConsumption', 'aktueller Wasserverbrauch', '', 50);
-        IPS_SetIcon($this->GetIDForIdent('CurrentWaterConsumption'), 'Drop');
-        $this->RegisterVariableFloat('CurrentEnergyConsumption', 'aktueller Energieverbrauch', '', 55);
-        IPS_SetIcon($this->GetIDForIdent('CurrentEnergyConsumption'), 'Energy');
+        $this->RegisterVariableFloat('CurrentWaterConsumption', 'aktueller Wasserverbrauch', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'SUFFIX' => 'l',
+            'ICON' => 'Drop'
+        ], 50);
+        $this->RegisterVariableFloat('CurrentEnergyConsumption', 'aktueller Energieverbrauch', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'SUFFIX' => 'kWh',
+            'ICON' => 'Electricity'
+        ], 55);
     }
 
     public function ApplyChanges(): void{
         parent::ApplyChanges();
-
-
-        // Symcon 8 Custom Presentations
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('StatusText'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON'=> 'Information'
-        ]);
-
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('SignalFailure'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON'=> 'Alert'
-        ]);
-        
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('StartTime'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON'=> 'Clock'
-        ]);
-        
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('FinishTime'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON'=> 'Clock'
-        ]);
-        
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('ElapsedTime'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'SUFFIX'=> 'min',
-            'ICON'=> 'Clock'
-        ]);
-        
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('RemainingTime'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'SUFFIX'=> 'min',
-            'ICON'=> 'Clock'
-        ]);
-        
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('RemainingTimeSeconds'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'SUFFIX'=> 's',
-            'ICON'=> 'Clock'
-        ]);
-        
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('ProgressPct'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'SUFFIX'=> '%',
-            'ICON'=> 'Intensity'
-        ]);
-        
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('Temperature'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'SUFFIX'=> '°C',
-            'ICON'=> 'Temperature'
-        ]);
-        
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('SpinSpeed'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'SUFFIX'=> 'U/min',
-            'ICON'=> 'Motion'
-        ]);
-        
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('Door'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON'=> 'Window'
-        ]);
-
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('CurrentWaterConsumption'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'SUFFIX'=> 'l',
-            'ICON'=> 'Drop'
-        ]);
-        
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('CurrentEnergyConsumption'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'SUFFIX'=> 'kWh',
-            'ICON'=> 'Electricity'
-        ]);
-        
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('TwinDos1'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'SUFFIX'=> '%',
-            'ICON'=> 'Drop'
-        ]);
-        
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('TwinDos2'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'SUFFIX'=> '%',
-            'ICON'=> 'Drop'
-        ]);
     }
 
     public function ReceiveData(string $JSONString): string
@@ -177,7 +133,7 @@ $this->RegisterPropertyString('DeviceID', '');
         return "";
     }
 
-    private function FetchFillingLevels($deviceId)
+    private function FetchFillingLevels(string $deviceId): void
     {
         $payload = [
             'DataID'=> '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}',
@@ -205,7 +161,7 @@ $this->RegisterPropertyString('DeviceID', '');
         $this->SLog('INFO', $text);
     }
 
-    private function ProcessDeviceData(array $deviceData)
+    private function ProcessDeviceData(array $deviceData): void
     {
         if (isset($deviceData['state'])) {
             $state = $deviceData['state'];
@@ -339,7 +295,7 @@ $this->RegisterPropertyString('DeviceID', '');
         }
     }
 
-    public function UpdateDevice()
+    public function UpdateDevice(): void
     {
         $deviceId = $this->ReadPropertyString('DeviceID');
         if (empty($deviceId)) {

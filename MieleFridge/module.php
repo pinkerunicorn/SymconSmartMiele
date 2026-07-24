@@ -21,58 +21,40 @@ $this->RegisterPropertyString('DeviceID', '');
 
         
         // Variables
-        $this->RegisterVariableString('StatusText', 'Status', '', 15);
-        IPS_SetIcon($this->GetIDForIdent('StatusText'), 'Information');
+        $this->RegisterVariableString('StatusText', 'Status', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Information'
+        ], 15);
         
-        $this->RegisterVariableInteger('Temp1', 'Ist-Temperatur (Zone 1)', '', 20);
-        IPS_SetIcon($this->GetIDForIdent('Temp1'), 'Temperature');
-        $this->RegisterVariableInteger('TargetTemp1', 'Ziel-Temperatur (Zone 1)', '', 25);
-        IPS_SetIcon($this->GetIDForIdent('TargetTemp1'), 'Temperature');
+        $this->RegisterVariableInteger('Temp1', 'Ist-Temperatur (Zone 1)', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'SUFFIX' => ' °C',
+            'ICON' => 'Temperature'
+        ], 20);
+        $this->RegisterVariableInteger('TargetTemp1', 'Ziel-Temperatur (Zone 1)', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
+            'SUFFIX' => ' °C',
+            'ICON' => 'Temperature',
+            'MIN' => 2,
+            'MAX' => 9,
+            'STEP' => 1
+        ], 25);
         $this->EnableAction('TargetTemp1');
         
-        $this->RegisterVariableBoolean('DoorOpen', 'Tür geöffnet', '', 30);
-        IPS_SetIcon($this->GetIDForIdent('DoorOpen'), 'Window');
+        $this->RegisterVariableBoolean('DoorOpen', 'Tür geöffnet', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Alert'
+        ], 30);
 
-        $this->RegisterVariableBoolean('SuperCooling', 'Schnellkühlen', '', 35);
-        IPS_SetIcon($this->GetIDForIdent('SuperCooling'), 'Snowflake');
+        $this->RegisterVariableBoolean('SuperCooling', 'Schnellkühlen', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Power'
+        ], 35);
         $this->EnableAction('SuperCooling');
     }
 
     public function ApplyChanges(): void{
         parent::ApplyChanges();
-
-
-        // Symcon 8 Custom Presentations
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('StatusText'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON'=> 'Information'
-        ]);
-        
-        $tempPresentation = [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'SUFFIX'=> ' °C',
-            'ICON'=> 'Temperature'
-        ];
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('Temp1'), $tempPresentation);
-        
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('TargetTemp1'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_SLIDER,
-            'SUFFIX'=> ' °C',
-            'ICON'=> 'Temperature',
-            'MIN'=> 2,
-            'MAX'=> 9,
-            'STEP'=> 1
-        ]);
-
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('DoorOpen'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON'=> 'Alert'
-        ]);
-
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('SuperCooling'), [
-                'PRESENTATION'=> VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON'=> 'Power'
-        ]);
     }
 
     public function ReceiveData(string $JSONString): string
@@ -92,7 +74,7 @@ $this->RegisterPropertyString('DeviceID', '');
         return "";
     }
 
-    private function ProcessDeviceData(array $deviceData)
+    private function ProcessDeviceData(array $deviceData): void
     {
         if (isset($deviceData['state'])) {
             $state = $deviceData['state'];
@@ -137,7 +119,7 @@ $this->RegisterPropertyString('DeviceID', '');
         }
     }
 
-    public function UpdateDevice()
+    public function UpdateDevice(): void
     {
         $deviceId = $this->ReadPropertyString('DeviceID');
         if (empty($deviceId)) {
@@ -166,7 +148,7 @@ $this->RegisterPropertyString('DeviceID', '');
         }
     }
 
-    public function RequestAction(string $Ident, $Value): void{
+    public function RequestAction(string $Ident, mixed $Value): void{
         $deviceId = $this->ReadPropertyString('DeviceID');
         if (empty($deviceId)) {
             return;

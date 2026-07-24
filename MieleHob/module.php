@@ -19,14 +19,18 @@ class MieleHob extends IPSModuleStrict
         $this->RegisterPropertyInteger('PlateCount', 4);
 
         // Variables
-        $this->RegisterVariableString('StatusText', 'Status', '', 10);
-        IPS_SetIcon($this->GetIDForIdent('StatusText'), 'Information');
+        $this->RegisterVariableString('StatusText', 'Status', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Information'
+        ], 10);
         
         // Dynamisch je nach Modell Kochzonen anlegen (meistens 4-6)
         // Wir legen prophylaktisch 4 an
         for ($i=1; $i<=4; $i++) {
-            $this->RegisterVariableString('Plate'. $i, 'Kochzone '. $i, '', 20 + $i);
-            IPS_SetIcon($this->GetIDForIdent('Plate'. $i), 'Flame');
+            $this->RegisterVariableString('Plate'. $i, 'Kochzone '. $i, [
+                'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                'ICON' => 'Flame'
+            ], 20 + $i);
         }
     }
 
@@ -34,23 +38,8 @@ class MieleHob extends IPSModuleStrict
         parent::ApplyChanges();
 
 
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('StatusText'), [
-            // VARIABLE_PRESENTATION_LABEL
-            'ICON'=> 'Information'
-        ]);
-
         $plates = $this->ReadPropertyInteger('PlateCount');
         
-        if (!IPS_VariableProfileExists('Miele.PlateLevel')) {
-            IPS_CreateVariableProfile('Miele.PlateLevel', 1);
-            IPS_SetVariableProfileIcon('Miele.PlateLevel', 'Flame');
-            IPS_SetVariableProfileText('Miele.PlateLevel', '', 'Stufe');
-            IPS_SetVariableProfileAssociation('Miele.PlateLevel', 0, 'Aus', '', 0xFFFFFF);
-            for ($s=1; $s<=9; $s++) {
-                IPS_SetVariableProfileAssociation('Miele.PlateLevel', $s, 'Stufe '.$s, '', -1);
-            }
-        }
-
         for ($i = 1; $i <= $plates; $i++) {
             $ident = 'Plate'. $i;
             $id = @$this->GetIDForIdent($ident);
@@ -61,8 +50,10 @@ class MieleHob extends IPSModuleStrict
                 }
             }
             
-            $this->RegisterVariableString($ident, 'Kochzone '. $i, '', 20 + $i);
-            IPS_SetIcon($this->GetIDForIdent($ident), 'Flame');
+            $this->RegisterVariableString($ident, 'Kochzone '. $i, [
+                'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                'ICON' => 'Flame'
+            ], 20 + $i);
         }
     }
 
