@@ -256,6 +256,9 @@ $this->RegisterPropertyString('ClientID', '');
     public function ForwardData(string $JSONString): string
     {
         $data = json_decode($JSONString, true);
+        if (!is_array($data)) {
+            return '{}';
+        }
         if ($data['DataID'] == '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}') {
             if (isset($data['Command'])) {
                 switch ($data['Command']) {

@@ -88,6 +88,9 @@ $this->RegisterPropertyString('DeviceID', '');
     public function ReceiveData(string $JSONString): string
     {
         $data = json_decode($JSONString, true);
+        if (!is_array($data)) {
+            return "";
+        }
         if ($data['DataID'] == '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}') {
             $deviceId = $this->ReadPropertyString('DeviceID');
             if (empty($deviceId)) {
@@ -245,7 +248,7 @@ $this->RegisterPropertyString('DeviceID', '');
             echo "Gerät erfolgreich aktualisiert!\n";
         } else {
             if (isset($state['message'])) {
-                echo "Fehler beim Update: ". $state['message'] . "\n";
+                $this->SLog('ERROR', 'Miele Update-Fehler', $state['message'] ?? 'Unbekannter Fehler');
             } else {
                 echo "Fehler beim Update: Konnte keine Daten abrufen. Bitte API-Verbindung und Device ID prüfen.\n";
             }
