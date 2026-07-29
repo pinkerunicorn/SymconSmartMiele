@@ -70,6 +70,40 @@ class MieleFridge extends IPSModuleStrict
     public function ApplyChanges(): void{
         parent::ApplyChanges();
 
+        // CustomPresentation: SuperCooling
+        $superCoolingOptions = json_encode([
+            ['Value' => false, 'Caption' => 'Aus', 'IconValue' => 'Snowflake', 'IconActive' => false, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
+            ['Value' => true, 'Caption' => 'Aktiv', 'IconValue' => 'Snowflake', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00BFFF, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00BFFF]
+        ]);
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('SuperCooling'), [
+            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
+            'ICON' => 'Snowflake',
+            'COLOR' => -1,
+            'CONTENT_COLOR' => -1,
+            'DISPLAY_TYPE' => 0,
+            'PREVIEW_STYLE' => 1,
+            'SHOW_PREVIEW' => true,
+            'OPTIONS' => $superCoolingOptions
+        ]);
+
+        // CustomPresentation: SuperFreezing
+        if ($this->ReadPropertyBoolean('EnableSuperFreezing')) {
+            $superFreezingOptions = json_encode([
+                ['Value' => false, 'Caption' => 'Aus', 'IconValue' => 'Snowflake', 'IconActive' => false, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
+                ['Value' => true, 'Caption' => 'Aktiv', 'IconValue' => 'Snowflake', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x0066CC, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x0066CC]
+            ]);
+            IPS_SetVariableCustomPresentation($this->GetIDForIdent('SuperFreezing'), [
+                'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
+                'ICON' => 'Snowflake',
+                'COLOR' => -1,
+                'CONTENT_COLOR' => -1,
+                'DISPLAY_TYPE' => 0,
+                'PREVIEW_STYLE' => 1,
+                'SHOW_PREVIEW' => true,
+                'OPTIONS' => $superFreezingOptions
+            ]);
+        }
+
         // CustomPresentation: Tür
         $doorOptions = json_encode([
             ['Value' => false, 'Caption' => 'Offen', 'IconValue' => 'door-open', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFF0000, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFF0000],

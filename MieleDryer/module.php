@@ -25,7 +25,7 @@ class MieleDryer extends IPSModuleStrict
         $this->RegisterAttributeInteger('AnchorStartTime', 0);
 
         // Variables
-        $this->RegisterVariableString('PowerSupply', 'Spannungsversorgung', [
+        $this->RegisterVariableInteger('PowerSupply', 'Spannungsversorgung', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => 'Power'
         ], 5);
@@ -48,6 +48,7 @@ class MieleDryer extends IPSModuleStrict
             'ICON' => 'Information'
         ], 10);
         $this->RegisterVariableBoolean('SignalInfo', 'Hinweis vorhanden', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => 'Information'
         ], 11);
         $this->RegisterVariableBoolean('SignalFailure', 'Fehler erkannt', [
@@ -56,9 +57,11 @@ class MieleDryer extends IPSModuleStrict
         ], 12);
         
         $this->RegisterVariableString('ProgramName', 'Programmbezeichnung', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => 'Script'
         ], 21);
         $this->RegisterVariableString('ProgramPhaseText', 'Programm-Phase', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => 'Script'
         ], 22);
         
@@ -117,6 +120,71 @@ class MieleDryer extends IPSModuleStrict
 
     public function ApplyChanges(): void{
         parent::ApplyChanges();
+
+        // CustomPresentation: PowerSupply
+        $powerSupplyOptions = json_encode([
+            ['Value' => 0, 'Caption' => 'Unbekannt', 'IconValue' => 'Power', 'IconActive' => false, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
+            ['Value' => 1, 'Caption' => 'Eingeschaltet', 'IconValue' => 'Power', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00CC00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00CC00],
+            ['Value' => 2, 'Caption' => 'Ausgeschaltet', 'IconValue' => 'Power', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFF0000, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFF0000]
+        ]);
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('PowerSupply'), [
+            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
+            'ICON' => 'Power',
+            'COLOR' => -1,
+            'CONTENT_COLOR' => -1,
+            'DISPLAY_TYPE' => 0,
+            'PREVIEW_STYLE' => 1,
+            'SHOW_PREVIEW' => true,
+            'OPTIONS' => $powerSupplyOptions
+        ]);
+
+        // CustomPresentation: PowerOn
+        $powerOnOptions = json_encode([
+            ['Value' => false, 'Caption' => 'Aus', 'IconValue' => 'Power', 'IconActive' => false, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
+            ['Value' => true, 'Caption' => 'Ein', 'IconValue' => 'Power', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00CC00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00CC00]
+        ]);
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('PowerOn'), [
+            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
+            'ICON' => 'Power',
+            'COLOR' => -1,
+            'CONTENT_COLOR' => -1,
+            'DISPLAY_TYPE' => 0,
+            'PREVIEW_STYLE' => 1,
+            'SHOW_PREVIEW' => true,
+            'OPTIONS' => $powerOnOptions
+        ]);
+
+        // CustomPresentation: SignalInfo
+        $signalInfoOptions = json_encode([
+            ['Value' => false, 'Caption' => 'Kein Hinweis', 'IconValue' => 'Information', 'IconActive' => false, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
+            ['Value' => true, 'Caption' => 'Hinweis!', 'IconValue' => 'Warning', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFFA500, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFFA500]
+        ]);
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('SignalInfo'), [
+            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
+            'ICON' => 'Information',
+            'COLOR' => -1,
+            'CONTENT_COLOR' => -1,
+            'DISPLAY_TYPE' => 0,
+            'PREVIEW_STYLE' => 1,
+            'SHOW_PREVIEW' => true,
+            'OPTIONS' => $signalInfoOptions
+        ]);
+
+        // CustomPresentation: SignalFailure
+        $signalFailureOptions = json_encode([
+            ['Value' => false, 'Caption' => 'OK', 'IconValue' => 'Ok', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00CC00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00CC00],
+            ['Value' => true, 'Caption' => 'Fehler!', 'IconValue' => 'Alert', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFF0000, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFF0000]
+        ]);
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('SignalFailure'), [
+            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
+            'ICON' => 'Alert',
+            'COLOR' => -1,
+            'CONTENT_COLOR' => -1,
+            'DISPLAY_TYPE' => 0,
+            'PREVIEW_STYLE' => 1,
+            'SHOW_PREVIEW' => true,
+            'OPTIONS' => $signalFailureOptions
+        ]);
 
         // CustomPresentation: Aktion Dropdown
         $actionOptions = json_encode([
@@ -244,9 +312,7 @@ class MieleDryer extends IPSModuleStrict
                 $this->SetValue('PowerOn', $statusRaw != 1);
             }
             if (isset($state['powerSupply']['value_raw'])) {
-                $psMap = [0 => 'Unbekannt', 1 => 'Eingeschaltet', 2 => 'Ausgeschaltet'];
-                $psRaw = (int)($state['powerSupply']['value_raw'] ?? 0);
-                $this->SetValue('PowerSupply', $psMap[$psRaw] ?? 'Unbekannt');
+                $this->SetValue('PowerSupply', (int)$state['powerSupply']['value_raw']);
             }
 
             if (isset($state['signalInfo'])) {

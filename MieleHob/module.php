@@ -36,7 +36,7 @@ class MieleHob extends IPSModuleStrict
             'ICON' => 'Information'
         ], 10);
         
-        $this->RegisterVariableString('PowerSupply', 'Spannungsversorgung', [
+        $this->RegisterVariableInteger('PowerSupply', 'Spannungsversorgung', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => 'Power'
         ], 5);
@@ -60,6 +60,37 @@ class MieleHob extends IPSModuleStrict
 
     public function ApplyChanges(): void{
         parent::ApplyChanges();
+
+        $powerSupplyOptions = json_encode([
+            ['Value' => 0, 'Caption' => 'Unbekannt', 'IconValue' => 'Power', 'IconActive' => true, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
+            ['Value' => 1, 'Caption' => 'Eingeschaltet', 'IconValue' => 'Power', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00CC00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00CC00],
+            ['Value' => 2, 'Caption' => 'Ausgeschaltet', 'IconValue' => 'Power', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFF0000, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFF0000]
+        ]);
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('PowerSupply'), [
+            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
+            'ICON' => 'Power',
+            'COLOR' => -1,
+            'CONTENT_COLOR' => -1,
+            'DISPLAY_TYPE' => 0,
+            'PREVIEW_STYLE' => 1,
+            'SHOW_PREVIEW' => true,
+            'OPTIONS' => $powerSupplyOptions
+        ]);
+
+        $isActiveOptions = json_encode([
+            ['Value' => false, 'Caption' => 'Inaktiv', 'IconValue' => 'Flame', 'IconActive' => true, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
+            ['Value' => true, 'Caption' => 'Aktiv', 'IconValue' => 'Flame', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFF6600, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFF6600]
+        ]);
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('IsActive'), [
+            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
+            'ICON' => 'Flame',
+            'COLOR' => -1,
+            'CONTENT_COLOR' => -1,
+            'DISPLAY_TYPE' => 0,
+            'PREVIEW_STYLE' => 1,
+            'SHOW_PREVIEW' => true,
+            'OPTIONS' => $isActiveOptions
+        ]);
 
 
         $plates = $this->ReadPropertyInteger('PlateCount');
@@ -117,9 +148,7 @@ class MieleHob extends IPSModuleStrict
             }
 
             if (isset($state['powerSupply']['value_raw'])) {
-                $psMap = [0 => 'Unbekannt', 1 => 'Eingeschaltet', 2 => 'Ausgeschaltet'];
-                $psRaw = (int)($state['powerSupply']['value_raw'] ?? 0);
-                $this->SetValue('PowerSupply', $psMap[$psRaw] ?? 'Unbekannt');
+                $this->SetValue('PowerSupply', (int)$state['powerSupply']['value_raw']);
             }
 
             if (isset($state['plateStep']) && is_array($state['plateStep'])) {
