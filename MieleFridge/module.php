@@ -119,6 +119,11 @@ class MieleFridge extends IPSModuleStrict
             'SHOW_PREVIEW' => true,
             'OPTIONS' => $doorOptions
         ]);
+
+        // Aktionen nach CustomPresentation re-aktivieren
+        $this->EnableAction('TargetTemp1');
+        $this->EnableAction('SuperCooling');
+        $this->EnableAction('SuperFreezing');
     }
 
     public function ReceiveData(string $JSONString): string

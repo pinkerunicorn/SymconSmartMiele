@@ -170,6 +170,8 @@ $this->RegisterPropertyString('DeviceID', '');
             'SHOW_PREVIEW' => true,
             'OPTIONS' => $actionOptions
         ]);
+        $this->EnableAction('ProcessAction');
+        $this->EnableAction('PowerOn');
 
         // CustomPresentation: Tür
         $doorOptions = json_encode([

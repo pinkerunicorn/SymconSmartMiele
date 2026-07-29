@@ -192,6 +192,12 @@ class MieleHood extends IPSModuleStrict
             'SHOW_PREVIEW' => true,
             'OPTIONS' => $ventOptions
         ]);
+
+        // Aktionen nach CustomPresentation re-aktivieren
+        $this->EnableAction('PowerOn');
+        $this->EnableAction('Light');
+        $this->EnableAction('AmbientLight');
+        $this->EnableAction('VentilationStep');
     }
 
     //==========================================================================
