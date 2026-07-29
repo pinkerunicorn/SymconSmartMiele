@@ -36,6 +36,29 @@ class MieleHob extends IPSModuleStrict
             'ICON' => 'Information'
         ], 10);
         
+        if (!IPS_VariableProfileExists('SM.Miele.PowerSupply')) {
+            IPS_CreateVariableProfile('SM.Miele.PowerSupply', 1);
+            IPS_SetVariableProfileAssociation('SM.Miele.PowerSupply', 0, 'Unbekannt', '', -1);
+            IPS_SetVariableProfileAssociation('SM.Miele.PowerSupply', 1, 'Eingeschaltet', '', -1);
+            IPS_SetVariableProfileAssociation('SM.Miele.PowerSupply', 2, 'Ausgeschaltet', '', -1);
+        }
+        $this->RegisterVariableInteger('PowerSupply', 'Spannungsversorgung', 'SM.Miele.PowerSupply', 5);
+
+        if (!IPS_VariableProfileExists('SM.Miele.PlateStep')) {
+            IPS_CreateVariableProfile('SM.Miele.PlateStep', 1);
+            IPS_SetVariableProfileAssociation('SM.Miele.PlateStep', 0, 'Aus', '', -1);
+            for ($j = 1; $j <= 9; $j++) {
+                IPS_SetVariableProfileAssociation('SM.Miele.PlateStep', $j, (string)$j, '', -1);
+            }
+            IPS_SetVariableProfileAssociation('SM.Miele.PlateStep', 10, 'Booster', '', -1);
+            IPS_SetVariableProfileAssociation('SM.Miele.PlateStep', 11, 'TwinBooster', '', -1);
+            IPS_SetVariableProfileAssociation('SM.Miele.PlateStep', 12, 'TwinBooster+', '', -1);
+        }
+        
+        for ($i = 1; $i <= 5; $i++) {
+            $this->RegisterVariableInteger('PlateStep' . $i, 'Leistungsstufe ' . $i, 'SM.Miele.PlateStep', 19 + $i);
+        }
+        
         // Dynamisch je nach Modell Kochzonen anlegen (meistens 4-6)
         // Wir legen prophylaktisch 4 an
         for ($i=1; $i<=4; $i++) {
@@ -104,6 +127,10 @@ class MieleHob extends IPSModuleStrict
                 $this->SetValue('StatusText', (string)$state['status']['value_localized']);
             }
 
+            if (isset($state['powerSupply']['value_raw'])) {
+                $this->SetValue('PowerSupply', (int)$state['powerSupply']['value_raw']);
+            }
+
             if (isset($state['plateStep']) && is_array($state['plateStep'])) {
                 $plates = $this->ReadPropertyInteger('PlateCount');
                 for ($i = 0; $i < $plates; $i++) {
@@ -112,13 +139,16 @@ class MieleHob extends IPSModuleStrict
                     }
                 }
 
-                $activeCount = 0;
-                foreach ($state['plateStep'] as $plate) {
-                    $value = $plate['value_localized'] ?? '';
-                    $rawValue = $plate['value_raw'] ?? 0;
-                    if ($rawValue > 0 || ($value !== '' && $value !== '0')) {
-                        $activeCount++;
+                foreach ($state['plateStep'] as $i => $step) {
+                    $zoneNum = $i + 1;
+                    if ($zoneNum <= 5 && isset($step['value_raw'])) {
+                        $this->SetValue('PlateStep' . $zoneNum, (int)$step['value_raw']);
                     }
+                }
+
+                $activeCount = 0;
+                foreach ($state['plateStep'] as $step) {
+                    if (isset($step['value_raw']) && (int)$step['value_raw'] > 0) $activeCount++;
                 }
                 $this->SetValue('IsActive', $activeCount > 0);
                 $this->SetValue('ActiveZoneCount', $activeCount);
