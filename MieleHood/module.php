@@ -22,6 +22,18 @@ class MieleHood extends IPSModuleStrict
         $this->RegisterPropertyString('DeviceID', '');
 
         // Variables
+        if (!IPS_VariableProfileExists('SM.Miele.PowerSupply')) {
+            IPS_CreateVariableProfile('SM.Miele.PowerSupply', 1);
+            IPS_SetVariableProfileAssociation('SM.Miele.PowerSupply', 0, 'Unbekannt', '', -1);
+            IPS_SetVariableProfileAssociation('SM.Miele.PowerSupply', 1, 'Eingeschaltet', '', -1);
+            IPS_SetVariableProfileAssociation('SM.Miele.PowerSupply', 2, 'Ausgeschaltet', '', -1);
+        }
+        $this->RegisterVariableInteger('PowerSupply', 'Spannungsversorgung', 'SM.Miele.PowerSupply', 5);
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('PowerSupply'), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON'         => 'Power'
+        ]);
+
         $this->RegisterVariableString('StatusText', 'Status', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => 'Information'
@@ -65,6 +77,26 @@ class MieleHood extends IPSModuleStrict
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => 'Alert'
         ], 41);
+
+        if (!IPS_VariableProfileExists('SM.Miele.Saturation')) {
+            IPS_CreateVariableProfile('SM.Miele.Saturation', 1);
+            IPS_SetVariableProfileText('SM.Miele.Saturation', '', '%');
+            IPS_SetVariableProfileValues('SM.Miele.Saturation', 0, 100, 1);
+        }
+        
+        $presentation = defined('VARIABLE_PRESENTATION_GAUGE') ? VARIABLE_PRESENTATION_GAUGE : VARIABLE_PRESENTATION_SLIDER;
+        
+        $this->RegisterVariableInteger('GreaseFilterSaturation', 'Fettfilter-Sättigung', 'SM.Miele.Saturation', 50);
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('GreaseFilterSaturation'), [
+            'PRESENTATION' => $presentation,
+            'ICON'         => 'Gauge'
+        ]);
+
+        $this->RegisterVariableInteger('CarbonFilterSaturation', 'Kohlefilter-Sättigung', 'SM.Miele.Saturation', 51);
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('CarbonFilterSaturation'), [
+            'PRESENTATION' => $presentation,
+            'ICON'         => 'Gauge'
+        ]);
     }
 
     public function ApplyChanges(): void
@@ -147,6 +179,21 @@ class MieleHood extends IPSModuleStrict
         // VentilationStep
         if (isset($state['ventilationStep']['value_raw'])) {
             $this->SetValue('VentilationStep', (int)$state['ventilationStep']['value_raw']);
+        }
+
+        // PowerSupply
+        if (isset($state['powerSupply']['value_raw'])) {
+            $this->SetValue('PowerSupply', (int)$state['powerSupply']['value_raw']);
+        }
+
+        // GreaseFilterSaturation
+        if (isset($state['greaseFilterSaturation'])) {
+            $this->SetValue('GreaseFilterSaturation', (int)$state['greaseFilterSaturation']);
+        }
+
+        // CarbonFilterSaturation
+        if (isset($state['carbonFilterSaturation'])) {
+            $this->SetValue('CarbonFilterSaturation', (int)$state['carbonFilterSaturation']);
         }
     }
 
