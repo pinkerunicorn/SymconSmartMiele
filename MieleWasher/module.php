@@ -115,13 +115,10 @@ $this->RegisterPropertyString('DeviceID', '');
             'SUFFIX' => 'U/min',
             'ICON' => 'Motion'
         ], 32);
-        // Tür-Profil
-        if (!IPS_VariableProfileExists('SM.Miele.Door')) {
-            IPS_CreateVariableProfile('SM.Miele.Door', 0);
-            IPS_SetVariableProfileAssociation('SM.Miele.Door', 0, 'Geschlossen', 'Window', 0x00CC00);
-            IPS_SetVariableProfileAssociation('SM.Miele.Door', 1, 'Geöffnet', 'Window', 0xFF6600);
-        }
-        $this->RegisterVariableBoolean('Door', 'Tür', 'SM.Miele.Door', 33);
+        $this->RegisterVariableString('Door', 'Tür', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Window'
+        ], 33);
         
         $this->RegisterVariableInteger('TwinDos1', 'TwinDos 1 Füllstand', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
@@ -287,7 +284,7 @@ $this->RegisterPropertyString('DeviceID', '');
                 if ($s > -1) $this->SetValue('SpinSpeed', (int)$s);
             }
             if (isset($state['signalDoor'])) {
-                $this->SetValue('Door', (bool)$state['signalDoor']);
+                $this->SetValue('Door', $state['signalDoor'] ? 'Geöffnet' : 'Geschlossen');
             }
             
             if (isset($state['ecoFeedback']['currentWaterConsumption']['value'])) {

@@ -43,13 +43,10 @@ class MieleFridge extends IPSModuleStrict
         ], 25);
         $this->EnableAction('TargetTemp1');
         
-        // Tür-Profil
-        if (!IPS_VariableProfileExists('SM.Miele.Door')) {
-            IPS_CreateVariableProfile('SM.Miele.Door', 0);
-            IPS_SetVariableProfileAssociation('SM.Miele.Door', 0, 'Geschlossen', 'Window', 0x00CC00);
-            IPS_SetVariableProfileAssociation('SM.Miele.Door', 1, 'Geöffnet', 'Window', 0xFF6600);
-        }
-        $this->RegisterVariableBoolean('DoorOpen', 'Tür', 'SM.Miele.Door', 30);
+        $this->RegisterVariableString('DoorOpen', 'Tür', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Window'
+        ], 30);
 
         $this->RegisterVariableBoolean('SuperCooling', 'Schnellkühlen', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
@@ -145,7 +142,7 @@ class MieleFridge extends IPSModuleStrict
             }
             
             if (isset($state['signalDoor'])) {
-                $this->SetValue('DoorOpen', (bool)$state['signalDoor']);
+                $this->SetValue('DoorOpen', $state['signalDoor'] ? 'Geöffnet' : 'Geschlossen');
             }
         }
     }
