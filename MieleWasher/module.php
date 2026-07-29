@@ -46,13 +46,7 @@ $this->RegisterPropertyString('DeviceID', '');
         // Aktion als Dropdown
         $this->RegisterVariableInteger('ProcessAction', 'Aktion', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Execute',
-            'ASSOCIATIONS' => [
-                ['Value' => 0, 'Name' => 'Keine Aktion', 'Color' => -1],
-                ['Value' => 1, 'Name' => 'Start', 'Color' => 0x00CC00],
-                ['Value' => 2, 'Name' => 'Stop', 'Color' => 0xFF0000],
-                ['Value' => 3, 'Name' => 'Pause', 'Color' => 0xFFAA00]
-            ]
+            'ICON' => 'Execute'
         ], 9);
         $this->EnableAction('ProcessAction');
         $this->RegisterVariableString('StatusText', 'Status', [
@@ -116,11 +110,7 @@ $this->RegisterPropertyString('DeviceID', '');
         ], 32);
         $this->RegisterVariableBoolean('Door', 'Tür', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'door-closed',
-            'ASSOCIATIONS' => [
-                ['Value' => false, 'Name' => 'Offen', 'Icon' => 'door-open', 'Color' => 0xFF0000],
-                ['Value' => true, 'Name' => 'Geschlossen', 'Icon' => 'door-closed', 'Color' => 0x00FF00]
-            ]
+            'ICON' => 'door-closed'
         ], 33);
         
         $this->RegisterVariableInteger('TwinDos1', 'TwinDos 1 Füllstand', [
@@ -159,6 +149,26 @@ $this->RegisterPropertyString('DeviceID', '');
 
     public function ApplyChanges(): void{
         parent::ApplyChanges();
+
+        // CustomPresentation mit ASSOCIATIONS
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('ProcessAction'), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Execute',
+            'ASSOCIATIONS' => [
+                ['Value' => 0, 'Name' => 'Keine Aktion', 'Color' => -1],
+                ['Value' => 1, 'Name' => 'Start', 'Color' => 0x00CC00],
+                ['Value' => 2, 'Name' => 'Stop', 'Color' => 0xFF0000],
+                ['Value' => 3, 'Name' => 'Pause', 'Color' => 0xFFAA00]
+            ]
+        ]);
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('Door'), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'door-closed',
+            'ASSOCIATIONS' => [
+                ['Value' => false, 'Name' => 'Offen', 'Icon' => 'door-open', 'Color' => 0xFF0000],
+                ['Value' => true, 'Name' => 'Geschlossen', 'Icon' => 'door-closed', 'Color' => 0x00FF00]
+            ]
+        ]);
     }
 
     public function ReceiveData(string $JSONString): string

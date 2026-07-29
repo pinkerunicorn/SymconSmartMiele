@@ -53,14 +53,7 @@ class MieleHood extends IPSModuleStrict
         // Lüfterstufe als Dropdown
         $this->RegisterVariableInteger('VentilationStep', 'Lüfterstufe', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Ventilator',
-            'ASSOCIATIONS' => [
-                ['Value' => 0, 'Name' => 'Aus', 'Color' => -1],
-                ['Value' => 1, 'Name' => 'Stufe 1', 'Color' => 0x00CC00],
-                ['Value' => 2, 'Name' => 'Stufe 2', 'Color' => 0xFFAA00],
-                ['Value' => 3, 'Name' => 'Stufe 3', 'Color' => 0xFF6600],
-                ['Value' => 4, 'Name' => 'Booster', 'Color' => 0xFF0000]
-            ]
+            'ICON' => 'Ventilator'
         ], 30);
         $this->EnableAction('VentilationStep');
 
@@ -89,6 +82,19 @@ class MieleHood extends IPSModuleStrict
     public function ApplyChanges(): void
     {
         parent::ApplyChanges();
+
+        // CustomPresentation mit ASSOCIATIONS setzen
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('VentilationStep'), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Ventilator',
+            'ASSOCIATIONS' => [
+                ['Value' => 0, 'Name' => 'Aus', 'Color' => -1],
+                ['Value' => 1, 'Name' => 'Stufe 1', 'Color' => 0x00CC00],
+                ['Value' => 2, 'Name' => 'Stufe 2', 'Color' => 0xFFAA00],
+                ['Value' => 3, 'Name' => 'Stufe 3', 'Color' => 0xFF6600],
+                ['Value' => 4, 'Name' => 'Booster', 'Color' => 0xFF0000]
+            ]
+        ]);
     }
 
     //==========================================================================

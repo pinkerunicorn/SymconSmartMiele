@@ -39,13 +39,7 @@ class MieleDryer extends IPSModuleStrict
         // Aktion als Dropdown (Profil wird ggf. von MieleWasher miterstellt)
         $this->RegisterVariableInteger('ProcessAction', 'Aktion', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Execute',
-            'ASSOCIATIONS' => [
-                ['Value' => 0, 'Name' => 'Keine Aktion', 'Color' => -1],
-                ['Value' => 1, 'Name' => 'Start', 'Color' => 0x00CC00],
-                ['Value' => 2, 'Name' => 'Stop', 'Color' => 0xFF0000],
-                ['Value' => 3, 'Name' => 'Pause', 'Color' => 0xFFAA00]
-            ]
+            'ICON' => 'Execute'
         ], 9);
         $this->EnableAction('ProcessAction');
 
@@ -100,11 +94,7 @@ class MieleDryer extends IPSModuleStrict
         
         $this->RegisterVariableBoolean('Door', 'Tür', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'door-closed',
-            'ASSOCIATIONS' => [
-                ['Value' => false, 'Name' => 'Offen', 'Icon' => 'door-open', 'Color' => 0xFF0000],
-                ['Value' => true, 'Name' => 'Geschlossen', 'Icon' => 'door-closed', 'Color' => 0x00FF00]
-            ]
+            'ICON' => 'door-closed'
         ], 33);
 
         $this->RegisterVariableString('DrynessLevel', 'Trocknungsstufe', [
@@ -127,6 +117,26 @@ class MieleDryer extends IPSModuleStrict
 
     public function ApplyChanges(): void{
         parent::ApplyChanges();
+
+        // CustomPresentation mit ASSOCIATIONS
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('ProcessAction'), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Execute',
+            'ASSOCIATIONS' => [
+                ['Value' => 0, 'Name' => 'Keine Aktion', 'Color' => -1],
+                ['Value' => 1, 'Name' => 'Start', 'Color' => 0x00CC00],
+                ['Value' => 2, 'Name' => 'Stop', 'Color' => 0xFF0000],
+                ['Value' => 3, 'Name' => 'Pause', 'Color' => 0xFFAA00]
+            ]
+        ]);
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('Door'), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'door-closed',
+            'ASSOCIATIONS' => [
+                ['Value' => false, 'Name' => 'Offen', 'Icon' => 'door-open', 'Color' => 0xFF0000],
+                ['Value' => true, 'Name' => 'Geschlossen', 'Icon' => 'door-closed', 'Color' => 0x00FF00]
+            ]
+        ]);
     }
 
     public function ReceiveData(string $JSONString): string

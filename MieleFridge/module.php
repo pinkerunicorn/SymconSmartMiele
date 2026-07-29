@@ -45,11 +45,7 @@ class MieleFridge extends IPSModuleStrict
         
         $this->RegisterVariableBoolean('DoorOpen', 'Tür', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'door-closed',
-            'ASSOCIATIONS' => [
-                ['Value' => false, 'Name' => 'Offen', 'Icon' => 'door-open', 'Color' => 0xFF0000],
-                ['Value' => true, 'Name' => 'Geschlossen', 'Icon' => 'door-closed', 'Color' => 0x00FF00]
-            ]
+            'ICON' => 'door-closed'
         ], 30);
 
         $this->RegisterVariableBoolean('SuperCooling', 'Schnellkühlen', [
@@ -73,6 +69,16 @@ class MieleFridge extends IPSModuleStrict
 
     public function ApplyChanges(): void{
         parent::ApplyChanges();
+
+        // CustomPresentation mit ASSOCIATIONS
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('DoorOpen'), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'door-closed',
+            'ASSOCIATIONS' => [
+                ['Value' => false, 'Name' => 'Offen', 'Icon' => 'door-open', 'Color' => 0xFF0000],
+                ['Value' => true, 'Name' => 'Geschlossen', 'Icon' => 'door-closed', 'Color' => 0x00FF00]
+            ]
+        ]);
     }
 
     public function ReceiveData(string $JSONString): string
