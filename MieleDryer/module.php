@@ -134,7 +134,7 @@ class MieleDryer extends IPSModuleStrict
         return "";
     }
 
-    public function RequestAction($Ident, $Value)
+    public function RequestAction(string $Ident, mixed $Value): void
     {
         switch ($Ident) {
             case 'PowerOn':
