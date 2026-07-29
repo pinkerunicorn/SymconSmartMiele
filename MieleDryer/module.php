@@ -25,13 +25,10 @@ class MieleDryer extends IPSModuleStrict
         $this->RegisterAttributeInteger('AnchorStartTime', 0);
 
         // Variables
-        if (!IPS_VariableProfileExists('SM.Miele.PowerSupply')) {
-            IPS_CreateVariableProfile('SM.Miele.PowerSupply', 1);
-            IPS_SetVariableProfileAssociation('SM.Miele.PowerSupply', 0, 'Unbekannt', '', -1);
-            IPS_SetVariableProfileAssociation('SM.Miele.PowerSupply', 1, 'Eingeschaltet', 'Power', 0x00FF00);
-            IPS_SetVariableProfileAssociation('SM.Miele.PowerSupply', 2, 'Ausgeschaltet', 'Power', 0xFF0000);
-        }
-        $this->RegisterVariableInteger('PowerSupply', 'Spannungsversorgung', 'SM.Miele.PowerSupply', 5);
+        $this->RegisterVariableString('PowerSupply', 'Spannungsversorgung', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Power'
+        ], 5);
 
         $this->RegisterVariableBoolean('PowerOn', 'Eingeschaltet', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
@@ -40,14 +37,16 @@ class MieleDryer extends IPSModuleStrict
         $this->EnableAction('PowerOn');
 
         // Aktion als Dropdown (Profil wird ggf. von MieleWasher miterstellt)
-        if (!IPS_VariableProfileExists('SM.Miele.ProcessAction')) {
-            IPS_CreateVariableProfile('SM.Miele.ProcessAction', 1);
-            IPS_SetVariableProfileAssociation('SM.Miele.ProcessAction', 0, 'Keine Aktion', '', -1);
-            IPS_SetVariableProfileAssociation('SM.Miele.ProcessAction', 1, 'Start', 'Execute', 0x00CC00);
-            IPS_SetVariableProfileAssociation('SM.Miele.ProcessAction', 2, 'Stop', 'Close', 0xFF0000);
-            IPS_SetVariableProfileAssociation('SM.Miele.ProcessAction', 3, 'Pause', 'Clock', 0xFFAA00);
-        }
-        $this->RegisterVariableInteger('ProcessAction', 'Aktion', 'SM.Miele.ProcessAction', 9);
+        $this->RegisterVariableInteger('ProcessAction', 'Aktion', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Execute',
+            'ASSOCIATIONS' => [
+                ['Value' => 0, 'Name' => 'Keine Aktion', 'Color' => -1],
+                ['Value' => 1, 'Name' => 'Start', 'Color' => 0x00CC00],
+                ['Value' => 2, 'Name' => 'Stop', 'Color' => 0xFF0000],
+                ['Value' => 3, 'Name' => 'Pause', 'Color' => 0xFFAA00]
+            ]
+        ], 9);
         $this->EnableAction('ProcessAction');
 
         $this->RegisterVariableString('StatusText', 'Status', [
@@ -217,7 +216,9 @@ class MieleDryer extends IPSModuleStrict
                 $this->SetValue('PowerOn', $statusRaw != 1);
             }
             if (isset($state['powerSupply']['value_raw'])) {
-                $this->SetValue('PowerSupply', (int)$state['powerSupply']['value_raw']);
+                $psMap = [0 => 'Unbekannt', 1 => 'Eingeschaltet', 2 => 'Ausgeschaltet'];
+                $psRaw = (int)($state['powerSupply']['value_raw'] ?? 0);
+                $this->SetValue('PowerSupply', $psMap[$psRaw] ?? 'Unbekannt');
             }
 
             if (isset($state['signalInfo'])) {
