@@ -22,10 +22,26 @@ class MieleWasher extends IPSModuleStrict
 $this->RegisterPropertyString('DeviceID', '');
         $this->RegisterPropertyBoolean('EnableTwinDos', true);
 
+        $this->RegisterAttributeInteger('LastTwinDos1', 0);
+        $this->RegisterAttributeInteger('LastTwinDos2', 0);
+
         // Connect to Splitter
 
         
         // Variables
+        $this->RegisterVariableBoolean('PowerOn', 'Eingeschaltet', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Power'
+        ], 8);
+        $this->EnableAction('PowerOn');
+
+        $this->RegisterVariableInteger('ProcessAction', 'Aktion', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
+            'MIN' => 0,
+            'MAX' => 3,
+            'SUFFIX' => ''
+        ], 9);
+        $this->EnableAction('ProcessAction');
         $this->RegisterVariableString('StatusText', 'Status', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => 'Information'
@@ -128,12 +144,16 @@ $this->RegisterPropertyString('DeviceID', '');
                 return "";
             }
 
-            if (isset($data['Devices'][$deviceId])) {
+            $type = $data['Type'] ?? '';
+            if (($type === 'DeviceUpdate' || !isset($data['Type'])) && isset($data['Devices'][$deviceId])) {
                 $this->ProcessDeviceData($data['Devices'][$deviceId]);
                 
                 if ($this->ReadPropertyBoolean('EnableTwinDos')) {
                     $this->FetchFillingLevels($deviceId);
                 }
+            }
+            if ($type === 'ActionsUpdate' && isset($data['Actions'][$deviceId])) {
+                $this->SetBuffer('DeviceActions', json_encode($data['Actions'][$deviceId]));
             }
         }
     
@@ -152,13 +172,34 @@ $this->RegisterPropertyString('DeviceID', '');
         $fillingLevels = json_decode($result, true);
         
         if ($fillingLevels) {
+            $val1 = null;
             if (isset($fillingLevels['twinDosContainer1FillingLevel'])) {
-                $val = is_array($fillingLevels['twinDosContainer1FillingLevel']) ? $fillingLevels['twinDosContainer1FillingLevel']['value_raw'] : $fillingLevels['twinDosContainer1FillingLevel'];
-                $this->SetValue('TwinDos1', (int)$val);
+                $val1 = is_array($fillingLevels['twinDosContainer1FillingLevel']) ? $fillingLevels['twinDosContainer1FillingLevel']['value_raw'] : $fillingLevels['twinDosContainer1FillingLevel'];
             }
+            if ($val1 === null || $val1 === '') {
+                $cached = $this->ReadAttributeInteger('LastTwinDos1');
+                if ($cached > 0) {
+                    $this->SetValue('TwinDos1', $cached);
+                }
+            } else {
+                $val1 = (int)$val1;
+                $this->WriteAttributeInteger('LastTwinDos1', $val1);
+                $this->SetValue('TwinDos1', $val1);
+            }
+
+            $val2 = null;
             if (isset($fillingLevels['twinDosContainer2FillingLevel'])) {
-                $val = is_array($fillingLevels['twinDosContainer2FillingLevel']) ? $fillingLevels['twinDosContainer2FillingLevel']['value_raw'] : $fillingLevels['twinDosContainer2FillingLevel'];
-                $this->SetValue('TwinDos2', (int)$val);
+                $val2 = is_array($fillingLevels['twinDosContainer2FillingLevel']) ? $fillingLevels['twinDosContainer2FillingLevel']['value_raw'] : $fillingLevels['twinDosContainer2FillingLevel'];
+            }
+            if ($val2 === null || $val2 === '') {
+                $cached = $this->ReadAttributeInteger('LastTwinDos2');
+                if ($cached > 0) {
+                    $this->SetValue('TwinDos2', $cached);
+                }
+            } else {
+                $val2 = (int)$val2;
+                $this->WriteAttributeInteger('LastTwinDos2', $val2);
+                $this->SetValue('TwinDos2', $val2);
             }
         }
     }
@@ -343,6 +384,41 @@ $this->RegisterPropertyString('DeviceID', '');
         return true;
     }
 
+    public function RequestAction($Ident, $Value): void
+    {
+        switch ($Ident) {
+            case 'PowerOn':
+                if ($Value) {
+                    $this->SendAction(['powerOn' => true]);
+                } else {
+                    $this->SendAction(['powerOff' => true]);
+                }
+                break;
+            case 'ProcessAction':
+                if ($Value > 0) {
+                    $this->SendAction(['processAction' => $Value]);
+                }
+                break;
+        }
+    }
+
+    private function SendAction(array $actionData): void
+    {
+        $deviceId = $this->ReadPropertyString('DeviceID');
+        if (empty($deviceId)) {
+            $this->Log("Fehler: Device ID fehlt.");
+            return;
+        }
+
+        $payload = [
+            'DataID' => '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}',
+            'Command' => 'ExecuteAction',
+            'DeviceID' => $deviceId,
+            'ActionData' => $actionData
+        ];
+        $this->SendDataToParent(json_encode($payload));
+    }
+
     public function GetConfigurationForm(): string
     {
         return <<<'EOT'
@@ -366,6 +442,10 @@ $this->RegisterPropertyString('DeviceID', '');
                     "caption": "Enable TwinDos Variables (Level 1 & 2)"
                 }
             ]
+        },
+        {
+            "type": "Label",
+            "caption": "⚠️ Fernstart (Start/Stop/Pause) funktioniert nur, wenn MobileStart am Gerät physisch aktiviert wurde und die Tür geschlossen ist."
         }
     ],
     "actions": [

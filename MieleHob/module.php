@@ -23,6 +23,14 @@ class MieleHob extends IPSModuleStrict
         $this->RegisterPropertyInteger('PlateCount', 4);
 
         // Variables
+        $this->RegisterVariableBoolean('IsActive', 'Kochfeld aktiv', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Flame'
+        ], 5);
+        $this->RegisterVariableInteger('ActiveZoneCount', 'Aktive Kochzonen', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Flame'
+        ], 6);
         $this->RegisterVariableString('StatusText', 'Status', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => 'Information'
@@ -73,8 +81,14 @@ class MieleHob extends IPSModuleStrict
                 return "";
             }
 
-            if (isset($data['Devices'][$deviceId])) {
-                $this->ProcessDeviceData($data['Devices'][$deviceId]);
+            $type = $data['Type'] ?? '';
+
+            if ($type === 'DeviceUpdate' || $type === '') {
+                if (isset($data['Devices'][$deviceId])) {
+                    $this->ProcessDeviceData($data['Devices'][$deviceId]);
+                }
+            } elseif ($type === 'ActionsUpdate') {
+                // Das Kochfeld ist read-only, daher ignorieren wir ActionsUpdates
             }
         }
     
@@ -97,6 +111,17 @@ class MieleHob extends IPSModuleStrict
                         $this->SetValue('Plate'. ($i + 1), (string)$state['plateStep'][$i]['value_localized']);
                     }
                 }
+
+                $activeCount = 0;
+                foreach ($state['plateStep'] as $plate) {
+                    $value = $plate['value_localized'] ?? '';
+                    $rawValue = $plate['value_raw'] ?? 0;
+                    if ($rawValue > 0 || ($value !== '' && $value !== '0')) {
+                        $activeCount++;
+                    }
+                }
+                $this->SetValue('IsActive', $activeCount > 0);
+                $this->SetValue('ActiveZoneCount', $activeCount);
             }
         }
     }
@@ -175,4 +200,3 @@ class MieleHob extends IPSModuleStrict
 EOT;
     }
 }
-

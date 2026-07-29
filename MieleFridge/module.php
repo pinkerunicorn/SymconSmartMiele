@@ -19,7 +19,7 @@ class MieleFridge extends IPSModuleStrict
                 @IPS_SetVariableCustomPresentation($childID, []);
             }
         }
-$this->RegisterPropertyString('DeviceID', '');
+        $this->RegisterPropertyString('DeviceID', '');
 
         // Connect to Splitter
 
@@ -55,6 +55,12 @@ $this->RegisterPropertyString('DeviceID', '');
             'ICON' => 'Power'
         ], 35);
         $this->EnableAction('SuperCooling');
+
+        $this->RegisterVariableBoolean('SuperFreezing', 'Schnellgefrieren', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Snowflake'
+        ], 36);
+        $this->EnableAction('SuperFreezing');
     }
 
     public function ApplyChanges(): void{
@@ -73,8 +79,16 @@ $this->RegisterPropertyString('DeviceID', '');
                 return "";
             }
 
-            if (isset($data['Devices'][$deviceId])) {
-                $this->ProcessDeviceData($data['Devices'][$deviceId]);
+            $type = $data['Type'] ?? 'DeviceUpdate';
+
+            if ($type === 'DeviceUpdate') {
+                if (isset($data['Devices'][$deviceId])) {
+                    $this->ProcessDeviceData($data['Devices'][$deviceId]);
+                }
+            } elseif ($type === 'ActionsUpdate') {
+                if (isset($data['Actions'][$deviceId])) {
+                    $this->SetBuffer('ActionsData', json_encode($data['Actions'][$deviceId]));
+                }
             }
         }
     
@@ -92,7 +106,23 @@ $this->RegisterPropertyString('DeviceID', '');
             if (isset($state['status']['value_raw'])) {
                 $statusRaw = $state['status']['value_raw'];
                 $isSuperCooling = ($statusRaw == 14 || $statusRaw == 146);
+                $isSuperFreezing = ($statusRaw == 15 || $statusRaw == 147);
+
+                $actionsData = $this->GetBuffer('ActionsData');
+                if ($actionsData) {
+                    $actions = json_decode($actionsData, true);
+                    if (isset($actions['processAction']) && is_array($actions['processAction'])) {
+                        if (in_array(7, $actions['processAction'])) {
+                            $isSuperCooling = true;
+                        }
+                        if (in_array(5, $actions['processAction'])) {
+                            $isSuperFreezing = true;
+                        }
+                    }
+                }
+
                 $this->SetValue('SuperCooling', $isSuperCooling);
+                $this->SetValue('SuperFreezing', $isSuperFreezing);
             }
 
             if (isset($state['temperature'][0]['value_raw'])) {
@@ -176,26 +206,33 @@ $this->RegisterPropertyString('DeviceID', '');
             case 'SuperCooling':
                 $actionData['processAction'] = $Value ? 6 : 7;
                 break;
-
+            case 'SuperFreezing':
+                $actionData['processAction'] = $Value ? 4 : 5;
+                break;
             default:
                 throw new Exception('Invalid Action');
         }
 
         if (!empty($actionData)) {
-            $payload = [
-                'DataID'=> '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}',
-                'Command'=> 'ExecuteAction',
-                'DeviceID'=> $deviceId,
-                'ActionData'=> $actionData
-            ];
-            
-            $result = $this->SendDataToParent(json_encode($payload));
-            $success = json_decode($result, true);
+            $success = $this->SendAction($deviceId, $actionData);
 
             if ($success) {
                 $this->SetValue($Ident, $Value);
             }
         }
+    }
+
+    private function SendAction(string $deviceId, array $actionData): bool
+    {
+        $payload = [
+            'DataID'=> '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}',
+            'Command'=> 'ExecuteAction',
+            'DeviceID'=> $deviceId,
+            'ActionData'=> $actionData
+        ];
+        
+        $result = $this->SendDataToParent(json_encode($payload));
+        return (bool)json_decode($result, true);
     }
 
     protected function LogMessage(string $Message, int $Type): bool

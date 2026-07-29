@@ -19,12 +19,23 @@ class MieleDryer extends IPSModuleStrict
                 @IPS_SetVariableCustomPresentation($childID, []);
             }
         }
-$this->RegisterPropertyString('DeviceID', '');
+        $this->RegisterPropertyString('DeviceID', '');
 
-        // Connect to Splitter
-
-        
         // Variables
+        $this->RegisterVariableBoolean('PowerOn', 'Eingeschaltet', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Power'
+        ], 8);
+        $this->EnableAction('PowerOn');
+
+        $this->RegisterVariableInteger('ProcessAction', 'Aktion', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
+            'MIN' => 0,
+            'MAX' => 3,
+            'SUFFIX' => ''
+        ], 9);
+        $this->EnableAction('ProcessAction');
+
         $this->RegisterVariableString('StatusText', 'Status', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => 'Information'
@@ -77,6 +88,11 @@ $this->RegisterPropertyString('DeviceID', '');
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => 'Window'
         ], 33);
+
+        $this->RegisterVariableString('DrynessLevel', 'Trocknungsstufe', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Drops'
+        ], 35);
         
         $this->RegisterVariableFloat('CurrentEnergyConsumption', 'aktueller Energieverbrauch', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
@@ -101,12 +117,60 @@ $this->RegisterPropertyString('DeviceID', '');
                 return "";
             }
 
-            if (isset($data['Devices'][$deviceId])) {
-                $this->ProcessDeviceData($data['Devices'][$deviceId]);
+            $type = $data['Type'] ?? '';
+
+            if ($type === 'DeviceUpdate' || $type === '') {
+                if (isset($data['Devices'][$deviceId])) {
+                    $this->ProcessDeviceData($data['Devices'][$deviceId]);
+                }
+            }
+            if ($type === 'ActionsUpdate' || $type === '') {
+                if (isset($data['Actions'][$deviceId])) {
+                    $this->SetBuffer('ActionsUpdate', json_encode($data['Actions'][$deviceId]));
+                }
             }
         }
     
         return "";
+    }
+
+    public function RequestAction($Ident, $Value)
+    {
+        switch ($Ident) {
+            case 'PowerOn':
+                $action = $Value ? 'powerOn' : 'powerOff';
+                $this->SendAction([$action => true]);
+                $this->SetValue($Ident, $Value);
+                break;
+            case 'ProcessAction':
+                if ($Value == 1) {
+                    $this->SendAction(['processAction' => 1]);
+                } elseif ($Value == 2) {
+                    $this->SendAction(['processAction' => 2]);
+                } elseif ($Value == 3) {
+                    $this->SendAction(['processAction' => 3]);
+                }
+                $this->SetValue($Ident, 0);
+                break;
+        }
+    }
+
+    private function SendAction(array $actionData): void
+    {
+        $deviceId = $this->ReadPropertyString('DeviceID');
+        if (empty($deviceId)) {
+            $this->Log("Fehler: DeviceID ist leer.");
+            return;
+        }
+
+        $payload = [
+            'DataID' => '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}',
+            'Command' => 'ExecuteAction',
+            'DeviceID' => $deviceId,
+            'ActionData' => $actionData
+        ];
+        
+        $this->SendDataToParent(json_encode($payload));
     }
 
     protected function Log(string $text): void
@@ -126,6 +190,12 @@ $this->RegisterPropertyString('DeviceID', '');
                 }
                 $this->SetValue('StatusText', $newStatus);
             }
+            
+            $statusRaw = $state['status']['value_raw'] ?? 0;
+            if ($statusRaw > 0) {
+                $this->SetValue('PowerOn', $statusRaw != 1);
+            }
+
             if (isset($state['signalInfo'])) {
                 $this->SetValue('SignalInfo', (bool)$state['signalInfo']);
             }
@@ -143,13 +213,17 @@ $this->RegisterPropertyString('DeviceID', '');
             if (isset($state['signalDoor'])) {
                 $this->SetValue('Door', (bool)$state['signalDoor']);
             }
+
+            if (isset($state['dryingStep']['value_localized'])) {
+                $this->SetValue('DrynessLevel', (string)$state['dryingStep']['value_localized']);
+            } elseif (isset($state['drynessLevel']['value_localized'])) {
+                $this->SetValue('DrynessLevel', (string)$state['drynessLevel']['value_localized']);
+            }
             
             if (isset($state['ecoFeedback']['currentEnergyConsumption']['value'])) {
                 $this->SetValue('CurrentEnergyConsumption', (float)$state['ecoFeedback']['currentEnergyConsumption']['value']);
             }
 
-            $statusRaw = $state['status']['value_raw'] ?? 0;
-            
             // --- Time & Progress Calculation ---
             $remMinutes = @$this->GetValue('RemainingTime');
             if (isset($state['remainingTime']) && is_array($state['remainingTime']) && count($state['remainingTime']) == 2) {
@@ -276,6 +350,10 @@ $this->RegisterPropertyString('DeviceID', '');
             "caption": "Damit ich deinen Trockner finde, trag bitte hier die Miele Device ID (fabNumber) ein."
         },
         {
+            "type": "Label",
+            "caption": "Damit eine Steuerung (z.B. Starten, Programmwahl) über IP-Symcon möglich ist, muss \"MobileStart\" am Gerät aktiv sein."
+        },
+        {
             "type": "RowLayout",
             "items": [
                 {
@@ -297,5 +375,3 @@ $this->RegisterPropertyString('DeviceID', '');
 EOT;
     }
 }
-
-
