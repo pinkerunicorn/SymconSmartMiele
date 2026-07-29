@@ -153,23 +153,15 @@ $this->RegisterPropertyString('DeviceID', '');
     public function ApplyChanges(): void{
         parent::ApplyChanges();
 
-        // CustomPresentation: Aktion Dropdown
-        $actionOptions = json_encode([
-            ['Value' => 0, 'Caption' => 'Keine Aktion', 'IconValue' => '', 'IconActive' => false, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
-            ['Value' => 1, 'Caption' => 'Start', 'IconValue' => 'Execute', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00CC00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00CC00],
-            ['Value' => 2, 'Caption' => 'Stop', 'IconValue' => 'Close', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFF0000, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFF0000],
-            ['Value' => 3, 'Caption' => 'Pause', 'IconValue' => 'Clock', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFFAA00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFFAA00]
-        ]);
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('ProcessAction'), [
-            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
-            'ICON' => 'Execute',
-            'COLOR' => -1,
-            'CONTENT_COLOR' => -1,
-            'DISPLAY_TYPE' => 0,
-            'PREVIEW_STYLE' => 1,
-            'SHOW_PREVIEW' => true,
-            'OPTIONS' => $actionOptions
-        ]);
+        // ProcessAction: Legacy-Profil noetig, da Wertanzeige nicht mit EnableAction kompatibel ist
+        if (!IPS_VariableProfileExists('SM.Miele.ProcessAction')) {
+            IPS_CreateVariableProfile('SM.Miele.ProcessAction', 1);
+            IPS_SetVariableProfileAssociation('SM.Miele.ProcessAction', 0, 'Keine Aktion', '', -1);
+            IPS_SetVariableProfileAssociation('SM.Miele.ProcessAction', 1, 'Start', 'Execute', 0x00CC00);
+            IPS_SetVariableProfileAssociation('SM.Miele.ProcessAction', 2, 'Stop', 'Close', 0xFF0000);
+            IPS_SetVariableProfileAssociation('SM.Miele.ProcessAction', 3, 'Pause', 'Clock', 0xFFAA00);
+        }
+        IPS_SetVariableCustomProfile($this->GetIDForIdent('ProcessAction'), 'SM.Miele.ProcessAction');
         $this->EnableAction('ProcessAction');
         $this->EnableAction('PowerOn');
 
