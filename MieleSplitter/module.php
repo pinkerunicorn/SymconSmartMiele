@@ -460,11 +460,11 @@ class MieleSplitter extends IPSModuleStrict
             if (isset($data['Command'])) {
                 switch ($data['Command']) {
                     case 'ExecuteAction':
-                        return json_encode($this->ExecuteAction($data['DeviceID'], $data['ActionData']));
+                        return json_encode($this->ExecuteAction($data['DeviceID'] ?? '', $data['ActionData'] ?? []));
                     case 'ApiGet':
-                        return json_encode($this->ApiGet($data['Endpoint']));
+                        return json_encode($this->ApiGet($data['Endpoint'] ?? ''));
                     case 'GetAvailableActions':
-                        return json_encode($this->GetAvailableActions($data['DeviceID']));
+                        return json_encode($this->GetAvailableActions($data['DeviceID'] ?? ''));
                 }
             }
         }

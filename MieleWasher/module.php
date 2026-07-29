@@ -221,6 +221,11 @@ $this->RegisterPropertyString('DeviceID', '');
                 }
                 $this->SetValue('StatusText', $newStatus);
             }
+
+            // Power state: off (1) = false, anything else = true
+            if (isset($state['status']['value_raw'])) {
+                $this->SetValue('PowerOn', (int)$state['status']['value_raw'] !== 1);
+            }
             if (isset($state['signalInfo'])) {
                 $this->SetValue('SignalInfo', (bool)$state['signalInfo']);
             }
@@ -393,11 +398,13 @@ $this->RegisterPropertyString('DeviceID', '');
                 } else {
                     $this->SendAction(['powerOff' => true]);
                 }
+                $this->SetValue('PowerOn', (bool)$Value);
                 break;
             case 'ProcessAction':
                 if ($Value > 0) {
-                    $this->SendAction(['processAction' => $Value]);
+                    $this->SendAction(['processAction' => (int)$Value]);
                 }
+                $this->SetValue('ProcessAction', (int)$Value);
                 break;
         }
     }

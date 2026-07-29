@@ -47,9 +47,9 @@ class MieleHood extends IPSModuleStrict
 
         $this->RegisterVariableInteger('VentilationStep', 'Lüfterstufe', [
             'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
-            'MIN' => 0.0,
-            'MAX' => 4.0,
-            'STEP' => 1.0,
+            'MIN' => 0,
+            'MAX' => 4,
+            'STEP' => 1,
             'SUFFIX' => 'Stufe',
             'ICON' => 'Ventilator'
         ], 30);

@@ -132,22 +132,7 @@ class MieleFridge extends IPSModuleStrict
             }
             if (isset($state['targetTemperature'][0]['value_raw'])) {
                 $valTarget = (int)round($state['targetTemperature'][0]['value_raw'] / 100.0);
-                $this->SendDebug('TargetTemp Update', 'Raw: '. $valTarget . 'Type: '. gettype($valTarget), 0);
-                
-                $varID = @$this->GetIDForIdent('TargetTemp1');
-                if ($varID) {
-                    $varObj = @IPS_GetVariable($varID);
-                    if ($varObj) {
-                        $this->SendDebug('TargetTemp Update', 'VarID: '. $varID . 'SymconType: '. $varObj['VariableType'], 0);
-                    }
-                }
-
-                try {
-                    $this->SetValue('TargetTemp1', $valTarget);
-                } catch (\Throwable $e) {
-                    $this->SendDebug('TargetTemp Error', $e->getMessage(), 0);
-                    $this->SLog('ERROR', 'Error setting TargetTemp1: '. $e->getMessage());
-                }
+                $this->SetValue('TargetTemp1', $valTarget);
             }
             
             if (isset($state['signalDoor'])) {
