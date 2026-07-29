@@ -56,6 +56,15 @@ class MieleHood extends IPSModuleStrict
         }
         $this->RegisterVariableInteger('VentilationStep', 'Lüfterstufe', 'SM.Miele.VentilationStep', 30);
         $this->EnableAction('VentilationStep');
+
+        $this->RegisterVariableBoolean('SignalInfo', 'Hinweis vorhanden (z.B. Filter)', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Warning'
+        ], 40);
+        $this->RegisterVariableBoolean('SignalFailure', 'Fehler erkannt', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Alert'
+        ], 41);
     }
 
     public function ApplyChanges(): void
@@ -115,6 +124,14 @@ class MieleHood extends IPSModuleStrict
         if (isset($state['status']['value_raw'])) {
             $statusRaw = (int)$state['status']['value_raw'];
             $this->SetValue('PowerOn', $statusRaw !== 1);
+        }
+
+        // Signal-Flags (Hinweis = z.B. Fettfilter reinigen)
+        if (isset($state['signalInfo'])) {
+            $this->SetValue('SignalInfo', (bool)$state['signalInfo']);
+        }
+        if (isset($state['signalFailure'])) {
+            $this->SetValue('SignalFailure', (bool)$state['signalFailure']);
         }
 
         // Light (Miele API: 1=On, 2=Off)
