@@ -24,11 +24,22 @@ $this->RegisterPropertyString('DeviceID', '');
 
         $this->RegisterAttributeInteger('LastTwinDos1', 0);
         $this->RegisterAttributeInteger('LastTwinDos2', 0);
+        $this->RegisterAttributeFloat('LastEnergy', 0.0);
+        $this->RegisterAttributeFloat('LastWater', 0.0);
+        $this->RegisterAttributeInteger('AnchorStartTime', 0);
 
         // Connect to Splitter
 
         
         // Variables
+        if (!IPS_VariableProfileExists('SM.Miele.PowerSupply')) {
+            IPS_CreateVariableProfile('SM.Miele.PowerSupply', 1);
+            IPS_SetVariableProfileAssociation('SM.Miele.PowerSupply', 0, 'Unbekannt', '', -1);
+            IPS_SetVariableProfileAssociation('SM.Miele.PowerSupply', 1, 'Eingeschaltet', 'Power', 0x00FF00);
+            IPS_SetVariableProfileAssociation('SM.Miele.PowerSupply', 2, 'Ausgeschaltet', 'Power', 0xFF0000);
+        }
+        $this->RegisterVariableInteger('PowerSupply', 'Spannungsversorgung', 'SM.Miele.PowerSupply', 5);
+
         $this->RegisterVariableBoolean('PowerOn', 'Eingeschaltet', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => 'Power'
@@ -64,19 +75,20 @@ $this->RegisterPropertyString('DeviceID', '');
             'ICON' => 'Script'
         ], 22);
         
-        $this->RegisterVariableInteger('StartTime', 'Start um', [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Clock'
-        ], 25);
-        $this->RegisterVariableInteger('FinishTime', 'Ende um', [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Clock'
-        ], 26);
         $this->RegisterVariableInteger('ElapsedTime', 'verstrichene Zeit', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => 'min',
             'ICON' => 'Clock'
-        ], 27);
+        ], 22);
+        
+        $this->RegisterVariableString('StartTime', 'Start um', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Clock'
+        ], 23);
+        $this->RegisterVariableString('FinishTime', 'Ende um', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'Clock'
+        ], 24);
         $this->RegisterVariableInteger('RemainingTime', 'verbleibende Zeit', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => 'min',
@@ -129,6 +141,17 @@ $this->RegisterPropertyString('DeviceID', '');
             'SUFFIX' => 'kWh',
             'ICON' => 'Electricity'
         ], 55);
+        
+        $this->RegisterVariableFloat('LastEnergyConsumption', 'letzter Energieverbrauch', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'SUFFIX' => 'kWh',
+            'ICON' => 'Electricity'
+        ], 60);
+        $this->RegisterVariableFloat('LastWaterConsumption', 'letzter Wasserverbrauch', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'SUFFIX' => 'l',
+            'ICON' => 'Drops'
+        ], 61);
     }
 
     public function ApplyChanges(): void{
@@ -229,6 +252,9 @@ $this->RegisterPropertyString('DeviceID', '');
             if (isset($state['status']['value_raw'])) {
                 $this->SetValue('PowerOn', (int)$state['status']['value_raw'] !== 1);
             }
+            if (isset($state['powerSupply']['value_raw'])) {
+                $this->SetValue('PowerSupply', (int)$state['powerSupply']['value_raw']);
+            }
             if (isset($state['signalInfo'])) {
                 $this->SetValue('SignalInfo', (bool)$state['signalInfo']);
             }
@@ -262,10 +288,24 @@ $this->RegisterPropertyString('DeviceID', '');
             }
             
             if (isset($state['ecoFeedback']['currentWaterConsumption']['value'])) {
-                $this->SetValue('CurrentWaterConsumption', (float)$state['ecoFeedback']['currentWaterConsumption']['value']);
+                $water = (float)$state['ecoFeedback']['currentWaterConsumption']['value'];
+                $this->SetValue('CurrentWaterConsumption', $water);
+                if ($water > 0) {
+                    $this->WriteAttributeFloat('LastWater', $water);
+                    $this->SetValue('LastWaterConsumption', $water);
+                } else {
+                    $this->SetValue('LastWaterConsumption', $this->ReadAttributeFloat('LastWater'));
+                }
             }
             if (isset($state['ecoFeedback']['currentEnergyConsumption']['value'])) {
-                $this->SetValue('CurrentEnergyConsumption', (float)$state['ecoFeedback']['currentEnergyConsumption']['value']);
+                $energy = (float)$state['ecoFeedback']['currentEnergyConsumption']['value'];
+                $this->SetValue('CurrentEnergyConsumption', $energy);
+                if ($energy > 0) {
+                    $this->WriteAttributeFloat('LastEnergy', $energy);
+                    $this->SetValue('LastEnergyConsumption', $energy);
+                } else {
+                    $this->SetValue('LastEnergyConsumption', $this->ReadAttributeFloat('LastEnergy'));
+                }
             }
 
             $statusRaw = $state['status']['value_raw'] ?? 0;
@@ -288,11 +328,9 @@ $this->RegisterPropertyString('DeviceID', '');
             if ($statusRaw == 7) { // Finished
                 $remMinutes = 0;
                 $progress = 100;
-                $startTime = @$this->GetValue('StartTime');
-                $finishTime = @$this->GetValue('FinishTime');
             } else if ($statusRaw == 5) { // In Use
                 $now = (int)(floor(time() / 60) * 60); // Strip seconds
-                $oldStart = @$this->GetValue('StartTime');
+                $oldAnchor = $this->ReadAttributeInteger('AnchorStartTime');
                 
                 $machineElapsed = 0;
                 if (isset($state['elapsedTime']) && is_array($state['elapsedTime']) && count($state['elapsedTime']) == 2) {
@@ -303,51 +341,57 @@ $this->RegisterPropertyString('DeviceID', '');
                     $elapsedMinutes = $machineElapsed;
                     $expectedStart = $now - ($elapsedMinutes * 60);
                     // Jitter protection: keep anchored StartTime if it's close
-                    if ($oldStart > 0 && abs($expectedStart - $oldStart) < 300) {
-                        $startTime = $oldStart;
+                    if ($oldAnchor > 0 && abs($expectedStart - $oldAnchor) < 300) {
+                        $anchor = $oldAnchor;
                     } else {
-                        $startTime = $expectedStart;
+                        $anchor = $expectedStart;
                     }
                 } else {
                     // Miele Waschmaschinen senden oft KEINE verstrichene Zeit.
                     // Wir frieren die Startzeit ein und berechnen die verstrichene Zeit selbst!
-                    if ($oldStart > 0 && $oldStart <= time()) {
-                        $startTime = $oldStart;
+                    if ($oldAnchor > 0 && $oldAnchor <= time()) {
+                        $anchor = $oldAnchor;
                     } else {
-                        $startTime = $now;
+                        $anchor = $now;
                     }
-                    $elapsedMinutes = (int)round((time() - $startTime) / 60);
+                    $elapsedMinutes = (int)round((time() - $anchor) / 60);
                 }
-                
-                $finishTime = $now + ($remMinutes * 60);
+                $this->WriteAttributeInteger('AnchorStartTime', $anchor);
                 
                 $total = $elapsedMinutes + $remMinutes;
                 $progress = ($total > 0) ? (int)round(($elapsedMinutes / $total) * 100) : 0;
             } else if ($statusRaw == 4) { // Waiting to start
                 $progress = 0;
                 $elapsedMinutes = 0;
-                if (isset($state['startTime']) && is_array($state['startTime']) && count($state['startTime']) == 2) {
-                    $ts = mktime((int)$state['startTime'][0], (int)$state['startTime'][1], 0);
-                    if ($ts < time() - (12 * 3600)) $ts += 86400; // Next day
-                    $startTime = $ts;
-                } else {
-                    $startTime = 0;
-                }
-                $finishTime = ($startTime > 0) ? $startTime + ($remMinutes * 60) : 0;
             } else { // Off, Idle
                 $progress = 0;
                 $elapsedMinutes = 0;
                 $remMinutes = 0;
-                $startTime = 0;
-                $finishTime = 0;
+                $this->WriteAttributeInteger('AnchorStartTime', 0);
             }
 
             $this->SetValue('ElapsedTime', (int)$elapsedMinutes);
             $this->SetValue('RemainingTime', (int)$remMinutes);
             $this->SetValue('RemainingTimeSeconds', (int)($remMinutes * 60));
-            $this->SetValue('StartTime', (int)$startTime);
-            $this->SetValue('FinishTime', (int)$finishTime);
             $this->SetValue('ProgressPct', (int)$progress);
+            
+            // StartTime String
+            $startTimeStr = '-';
+            if (isset($state['startTime']) && is_array($state['startTime']) && count($state['startTime']) == 2) {
+                $startTimeStr = sprintf('%02d:%02d', $state['startTime'][0], $state['startTime'][1]);
+            }
+            $this->SetValue('StartTime', $startTimeStr);
+            
+            // FinishTime String
+            $finishTimeStr = '-';
+            if ($statusRaw == 5 || $statusRaw == 7) {
+                if ($remMinutes > 0) {
+                    $finishTimeStr = date('H:i', time() + ($remMinutes * 60));
+                } else {
+                    $finishTimeStr = date('H:i');
+                }
+            }
+            $this->SetValue('FinishTime', $finishTimeStr);
         }
     }
 
