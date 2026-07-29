@@ -98,9 +98,13 @@ class MieleDryer extends IPSModuleStrict
             'ICON' => 'Intensity'
         ], 29);
         
-        $this->RegisterVariableString('Door', 'Tür', [
+        $this->RegisterVariableBoolean('Door', 'Tür', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Window'
+            'ICON' => 'door-closed',
+            'ASSOCIATIONS' => [
+                ['Value' => false, 'Name' => 'Offen', 'Icon' => 'door-open', 'Color' => 0xFF0000],
+                ['Value' => true, 'Name' => 'Geschlossen', 'Icon' => 'door-closed', 'Color' => 0x00FF00]
+            ]
         ], 33);
 
         $this->RegisterVariableString('DrynessLevel', 'Trocknungsstufe', [
@@ -236,7 +240,7 @@ class MieleDryer extends IPSModuleStrict
             }
 
             if (isset($state['signalDoor'])) {
-                $this->SetValue('Door', $state['signalDoor'] ? 'Geöffnet' : 'Geschlossen');
+                $this->SetValue('Door', (bool)$state['signalDoor']);
             }
 
             if (isset($state['dryingStep']['value_localized'])) {

@@ -43,9 +43,13 @@ class MieleFridge extends IPSModuleStrict
         ], 25);
         $this->EnableAction('TargetTemp1');
         
-        $this->RegisterVariableString('DoorOpen', 'Tür', [
+        $this->RegisterVariableBoolean('DoorOpen', 'Tür', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Window'
+            'ICON' => 'door-closed',
+            'ASSOCIATIONS' => [
+                ['Value' => false, 'Name' => 'Offen', 'Icon' => 'door-open', 'Color' => 0xFF0000],
+                ['Value' => true, 'Name' => 'Geschlossen', 'Icon' => 'door-closed', 'Color' => 0x00FF00]
+            ]
         ], 30);
 
         $this->RegisterVariableBoolean('SuperCooling', 'Schnellkühlen', [
@@ -142,7 +146,7 @@ class MieleFridge extends IPSModuleStrict
             }
             
             if (isset($state['signalDoor'])) {
-                $this->SetValue('DoorOpen', $state['signalDoor'] ? 'Geöffnet' : 'Geschlossen');
+                $this->SetValue('DoorOpen', (bool)$state['signalDoor']);
             }
         }
     }
