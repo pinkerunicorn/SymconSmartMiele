@@ -83,17 +83,23 @@ class MieleHood extends IPSModuleStrict
     {
         parent::ApplyChanges();
 
-        // CustomPresentation mit ASSOCIATIONS setzen
+        // CustomPresentation: Lüfterstufe Dropdown
+        $ventOptions = json_encode([
+            ['Value' => 0, 'Caption' => 'Aus', 'IconValue' => 'Ventilator', 'IconActive' => true, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
+            ['Value' => 1, 'Caption' => 'Stufe 1', 'IconValue' => 'Ventilator', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00CC00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00CC00],
+            ['Value' => 2, 'Caption' => 'Stufe 2', 'IconValue' => 'Ventilator', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFFAA00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFFAA00],
+            ['Value' => 3, 'Caption' => 'Stufe 3', 'IconValue' => 'Ventilator', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFF6600, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFF6600],
+            ['Value' => 4, 'Caption' => 'Booster', 'IconValue' => 'Ventilator', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFF0000, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFF0000]
+        ]);
         IPS_SetVariableCustomPresentation($this->GetIDForIdent('VentilationStep'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
             'ICON' => 'Ventilator',
-            'ASSOCIATIONS' => [
-                ['Value' => 0, 'Name' => 'Aus', 'Color' => -1],
-                ['Value' => 1, 'Name' => 'Stufe 1', 'Color' => 0x00CC00],
-                ['Value' => 2, 'Name' => 'Stufe 2', 'Color' => 0xFFAA00],
-                ['Value' => 3, 'Name' => 'Stufe 3', 'Color' => 0xFF6600],
-                ['Value' => 4, 'Name' => 'Booster', 'Color' => 0xFF0000]
-            ]
+            'COLOR' => -1,
+            'CONTENT_COLOR' => -1,
+            'DISPLAY_TYPE' => 0,
+            'PREVIEW_STYLE' => 1,
+            'SHOW_PREVIEW' => true,
+            'OPTIONS' => $ventOptions
         ]);
     }
 

@@ -70,14 +70,20 @@ class MieleFridge extends IPSModuleStrict
     public function ApplyChanges(): void{
         parent::ApplyChanges();
 
-        // CustomPresentation mit ASSOCIATIONS
+        // CustomPresentation: Tür
+        $doorOptions = json_encode([
+            ['Value' => false, 'Caption' => 'Offen', 'IconValue' => 'door-open', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFF0000, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFF0000],
+            ['Value' => true, 'Caption' => 'Geschlossen', 'IconValue' => 'door-closed', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00FF00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00FF00]
+        ]);
         IPS_SetVariableCustomPresentation($this->GetIDForIdent('DoorOpen'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
             'ICON' => 'door-closed',
-            'ASSOCIATIONS' => [
-                ['Value' => false, 'Name' => 'Offen', 'Icon' => 'door-open', 'Color' => 0xFF0000],
-                ['Value' => true, 'Name' => 'Geschlossen', 'Icon' => 'door-closed', 'Color' => 0x00FF00]
-            ]
+            'COLOR' => -1,
+            'CONTENT_COLOR' => -1,
+            'DISPLAY_TYPE' => 0,
+            'PREVIEW_STYLE' => 1,
+            'SHOW_PREVIEW' => true,
+            'OPTIONS' => $doorOptions
         ]);
     }
 

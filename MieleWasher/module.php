@@ -150,24 +150,38 @@ $this->RegisterPropertyString('DeviceID', '');
     public function ApplyChanges(): void{
         parent::ApplyChanges();
 
-        // CustomPresentation mit ASSOCIATIONS
+        // CustomPresentation: Aktion Dropdown
+        $actionOptions = json_encode([
+            ['Value' => 0, 'Caption' => 'Keine Aktion', 'IconValue' => '', 'IconActive' => false, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
+            ['Value' => 1, 'Caption' => 'Start', 'IconValue' => 'Execute', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00CC00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00CC00],
+            ['Value' => 2, 'Caption' => 'Stop', 'IconValue' => 'Close', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFF0000, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFF0000],
+            ['Value' => 3, 'Caption' => 'Pause', 'IconValue' => 'Clock', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFFAA00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFFAA00]
+        ]);
         IPS_SetVariableCustomPresentation($this->GetIDForIdent('ProcessAction'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
             'ICON' => 'Execute',
-            'ASSOCIATIONS' => [
-                ['Value' => 0, 'Name' => 'Keine Aktion', 'Color' => -1],
-                ['Value' => 1, 'Name' => 'Start', 'Color' => 0x00CC00],
-                ['Value' => 2, 'Name' => 'Stop', 'Color' => 0xFF0000],
-                ['Value' => 3, 'Name' => 'Pause', 'Color' => 0xFFAA00]
-            ]
+            'COLOR' => -1,
+            'CONTENT_COLOR' => -1,
+            'DISPLAY_TYPE' => 0,
+            'PREVIEW_STYLE' => 1,
+            'SHOW_PREVIEW' => true,
+            'OPTIONS' => $actionOptions
+        ]);
+
+        // CustomPresentation: Tür
+        $doorOptions = json_encode([
+            ['Value' => false, 'Caption' => 'Offen', 'IconValue' => 'door-open', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFF0000, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFF0000],
+            ['Value' => true, 'Caption' => 'Geschlossen', 'IconValue' => 'door-closed', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00FF00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00FF00]
         ]);
         IPS_SetVariableCustomPresentation($this->GetIDForIdent('Door'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
             'ICON' => 'door-closed',
-            'ASSOCIATIONS' => [
-                ['Value' => false, 'Name' => 'Offen', 'Icon' => 'door-open', 'Color' => 0xFF0000],
-                ['Value' => true, 'Name' => 'Geschlossen', 'Icon' => 'door-closed', 'Color' => 0x00FF00]
-            ]
+            'COLOR' => -1,
+            'CONTENT_COLOR' => -1,
+            'DISPLAY_TYPE' => 0,
+            'PREVIEW_STYLE' => 1,
+            'SHOW_PREVIEW' => true,
+            'OPTIONS' => $doorOptions
         ]);
     }
 
