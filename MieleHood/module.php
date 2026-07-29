@@ -45,14 +45,16 @@ class MieleHood extends IPSModuleStrict
         ], 25);
         $this->EnableAction('AmbientLight');
 
-        $this->RegisterVariableInteger('VentilationStep', 'Lüfterstufe', [
-            'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
-            'MIN' => 0,
-            'MAX' => 4,
-            'STEP' => 1,
-            'SUFFIX' => 'Stufe',
-            'ICON' => 'Ventilator'
-        ], 30);
+        // Lüfterstufe als Dropdown
+        if (!IPS_VariableProfileExists('SM.Miele.VentilationStep')) {
+            IPS_CreateVariableProfile('SM.Miele.VentilationStep', 1);
+            IPS_SetVariableProfileAssociation('SM.Miele.VentilationStep', 0, 'Aus', 'Ventilator', -1);
+            IPS_SetVariableProfileAssociation('SM.Miele.VentilationStep', 1, 'Stufe 1', 'Ventilator', 0x00CC00);
+            IPS_SetVariableProfileAssociation('SM.Miele.VentilationStep', 2, 'Stufe 2', 'Ventilator', 0xFFAA00);
+            IPS_SetVariableProfileAssociation('SM.Miele.VentilationStep', 3, 'Stufe 3', 'Ventilator', 0xFF6600);
+            IPS_SetVariableProfileAssociation('SM.Miele.VentilationStep', 4, 'Booster', 'Ventilator', 0xFF0000);
+        }
+        $this->RegisterVariableInteger('VentilationStep', 'Lüfterstufe', 'SM.Miele.VentilationStep', 30);
         $this->EnableAction('VentilationStep');
     }
 

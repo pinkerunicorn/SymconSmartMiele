@@ -20,10 +20,8 @@ class MieleFridge extends IPSModuleStrict
             }
         }
         $this->RegisterPropertyString('DeviceID', '');
+        $this->RegisterPropertyBoolean('EnableSuperFreezing', false);
 
-        // Connect to Splitter
-
-        
         // Variables
         $this->RegisterVariableString('StatusText', 'Status', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
@@ -56,11 +54,17 @@ class MieleFridge extends IPSModuleStrict
         ], 35);
         $this->EnableAction('SuperCooling');
 
-        $this->RegisterVariableBoolean('SuperFreezing', 'Schnellgefrieren', [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Snowflake'
-        ], 36);
-        $this->EnableAction('SuperFreezing');
+        // SuperFreezing nur registrieren wenn in Config aktiviert
+        if ($this->ReadPropertyBoolean('EnableSuperFreezing')) {
+            $this->RegisterVariableBoolean('SuperFreezing', 'Schnellgefrieren', [
+                'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                'ICON' => 'Snowflake'
+            ], 36);
+            $this->EnableAction('SuperFreezing');
+        } else {
+            // Variable entfernen falls vorhanden
+            @$this->UnregisterVariable('SuperFreezing');
+        }
     }
 
     public function ApplyChanges(): void{
@@ -122,7 +126,9 @@ class MieleFridge extends IPSModuleStrict
                 }
 
                 $this->SetValue('SuperCooling', $isSuperCooling);
-                $this->SetValue('SuperFreezing', $isSuperFreezing);
+                if ($this->ReadPropertyBoolean('EnableSuperFreezing')) {
+                    $this->SetValue('SuperFreezing', $isSuperFreezing);
+                }
             }
 
             if (isset($state['temperature'][0]['value_raw'])) {
@@ -245,6 +251,11 @@ class MieleFridge extends IPSModuleStrict
                     "caption": "Miele Device ID (fabNumber)"
                 }
             ]
+        },
+        {
+            "type": "CheckBox",
+            "name": "EnableSuperFreezing",
+            "caption": "Gefrierfach vorhanden (Schnellgefrieren aktivieren)"
         }
     ],
     "actions": [

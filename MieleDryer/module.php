@@ -28,12 +28,15 @@ class MieleDryer extends IPSModuleStrict
         ], 8);
         $this->EnableAction('PowerOn');
 
-        $this->RegisterVariableInteger('ProcessAction', 'Aktion', [
-            'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
-            'MIN' => 0,
-            'MAX' => 3,
-            'SUFFIX' => ''
-        ], 9);
+        // Aktion als Dropdown (Profil wird ggf. von MieleWasher miterstellt)
+        if (!IPS_VariableProfileExists('SM.Miele.ProcessAction')) {
+            IPS_CreateVariableProfile('SM.Miele.ProcessAction', 1);
+            IPS_SetVariableProfileAssociation('SM.Miele.ProcessAction', 0, 'Keine Aktion', '', -1);
+            IPS_SetVariableProfileAssociation('SM.Miele.ProcessAction', 1, 'Start', 'Execute', 0x00CC00);
+            IPS_SetVariableProfileAssociation('SM.Miele.ProcessAction', 2, 'Stop', 'Close', 0xFF0000);
+            IPS_SetVariableProfileAssociation('SM.Miele.ProcessAction', 3, 'Pause', 'Clock', 0xFFAA00);
+        }
+        $this->RegisterVariableInteger('ProcessAction', 'Aktion', 'SM.Miele.ProcessAction', 9);
         $this->EnableAction('ProcessAction');
 
         $this->RegisterVariableString('StatusText', 'Status', [
