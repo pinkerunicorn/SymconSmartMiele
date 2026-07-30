@@ -3,10 +3,12 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../libs/Trait_SmartLog.php';
+require_once __DIR__ . '/../libs/Trait_CentralStateAware.php';
 
 class MieleHood extends IPSModuleStrict
 {
     use SmartLog_Trait;
+    use CentralStateAware_Trait;
 
     public function Create(): void
     {
@@ -82,6 +84,8 @@ class MieleHood extends IPSModuleStrict
     public function ApplyChanges(): void
     {
         parent::ApplyChanges();
+        
+        $this->SubscribeToCentralStates(['FireplaceActive']);
 
         $powerSupplyOptions = json_encode([
             ['Value' => 0, 'Caption' => 'Unbekannt', 'IconValue' => 'Power', 'IconActive' => true, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
@@ -204,6 +208,21 @@ class MieleHood extends IPSModuleStrict
     // Data Reception (from Splitter via SSE)
     //==========================================================================
 
+    public function MessageSink(int $TimeStamp, int $SenderID, int $Message, array $Data): void
+    {
+        if ($this->HandleCentralStateMessage($SenderID, $Message, $Data)) return;
+    }
+
+    private function OnCentralStateChanged(string $stateName, mixed $newValue): void
+    {
+        if ($stateName === 'FireplaceActive' && $newValue) {
+            $this->Log('Kamin ist aktiv! Schalte Dunstabzugshaube zur Sicherheit aus.');
+            if ($this->GetValue('PowerOn')) {
+                $this->RequestAction('PowerOn', false);
+            }
+        }
+    }
+
     public function ReceiveData(string $JSONString): string
     {
         $data = json_decode($JSONString, true);
@@ -307,6 +326,11 @@ class MieleHood extends IPSModuleStrict
 
         switch ($Ident) {
             case 'PowerOn':
+                if ($Value && $this->GetCentralState('FireplaceActive')) {
+                    echo "Fehler: Kamin ist aktiv! Dunstabzugshaube aus Sicherheitsgründen blockiert.\n";
+                    $this->Log('Blockiert: PowerOn wegen aktivem Kamin.');
+                    return;
+                }
                 $this->HandlePowerAction((bool)$Value);
                 break;
 
@@ -319,6 +343,11 @@ class MieleHood extends IPSModuleStrict
                 break;
 
             case 'VentilationStep':
+                if ($Value > 0 && $this->GetCentralState('FireplaceActive')) {
+                    echo "Fehler: Kamin ist aktiv! Lüftung aus Sicherheitsgründen blockiert.\n";
+                    $this->Log('Blockiert: VentilationStep wegen aktivem Kamin.');
+                    return;
+                }
                 $this->HandleVentilationAction((int)$Value);
                 break;
 
