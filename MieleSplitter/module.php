@@ -3,10 +3,12 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../libs/Trait_SmartLog.php';
+require_once __DIR__ . '/../libs/Trait_SmartHttp.php';
 
 class MieleSplitter extends IPSModuleStrict
 {
     use SmartLog_Trait;
+    use SmartHttp_Trait;
 
     // Miele API Base URL
     private const API_BASE = 'https://api.mcs3.miele.com';
@@ -276,41 +278,28 @@ class MieleSplitter extends IPSModuleStrict
      */
     private function ExecuteTokenRequest(string $postData): string|false
     {
-        $ch = curl_init(self::TOKEN_URL);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        $headers = [
             'Accept: application/json; charset=utf-8',
             'Content-Type: application/x-www-form-urlencoded'
-        ]);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        ];
 
-        $result = curl_exec($ch);
-        if ($result === false) {
-            $this->SLog('ERROR', 'Token-Anfrage fehlgeschlagen', curl_error($ch));
-            curl_close($ch);
+        $data = $this->HttpRequest(self::TOKEN_URL, 'POST', $headers, $postData, 10);
+        if ($data === null) {
+            $this->SetStatus(200); // Auth failed
             return false;
         }
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
-        $this->SendDebug('Auth', 'HTTP Code: ' . $httpCode . ' Result: ' . $result, 0);
-
-        if ($httpCode == 200 && $result) {
-            $data = json_decode($result, true);
-            if (isset($data['access_token'])) {
-                $this->WriteAttributeString('AccessToken', $data['access_token']);
-                if (isset($data['refresh_token'])) {
-                    $this->WriteAttributeString('RefreshToken', $data['refresh_token']);
-                }
-                $this->WriteAttributeInteger('TokenExpires', time() + ($data['expires_in'] ?? 3600));
-                $this->SetStatus(102);
-                return $data['access_token'];
+        if (isset($data['access_token'])) {
+            $this->WriteAttributeString('AccessToken', $data['access_token']);
+            if (isset($data['refresh_token'])) {
+                $this->WriteAttributeString('RefreshToken', $data['refresh_token']);
             }
+            $this->WriteAttributeInteger('TokenExpires', time() + ($data['expires_in'] ?? 3600));
+            $this->SetStatus(102);
+            return $data['access_token'];
         }
 
-        $this->SLog('ERROR', 'Token-Anfrage fehlgeschlagen', 'HTTP Code: ' . $httpCode);
+        $this->SLog('ERROR', 'Token-Anfrage fehlgeschlagen', 'Kein access_token im Response');
         $this->SetStatus(200); // Auth failed
         return false;
     }
@@ -351,31 +340,14 @@ class MieleSplitter extends IPSModuleStrict
         }
 
         $url = self::API_BASE . $endpoint;
-
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        $headers = [
             'Accept: application/json; charset=utf-8',
             'Authorization: Bearer ' . $token,
             'Accept-Language: ' . $this->ReadPropertyString('Country')
-        ]);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        ];
 
-        $result = curl_exec($ch);
-        if ($result === false) {
-            $this->SLog('ERROR', 'API-Anfrage fehlgeschlagen', curl_error($ch));
-            curl_close($ch);
-            return false;
-        }
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        $this->SendDebug('ApiGet', 'Endpoint: ' . $endpoint . ' HTTP Code: ' . $httpCode, 0);
-
-        if ($httpCode == 200 && $result) {
-            return json_decode($result, true);
-        }
-        return false;
+        $data = $this->HttpRequest($url, 'GET', $headers, null, 10);
+        return $data === null ? false : $data;
     }
 
     /**
@@ -389,42 +361,14 @@ class MieleSplitter extends IPSModuleStrict
         }
 
         $url = self::API_BASE . '/v1/devices/' . urlencode($deviceId) . '/actions';
-
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($actionData));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        $headers = [
             'Accept: */*',
-            'Content-Type: application/json',
             'Authorization: Bearer ' . $token,
             'Accept-Language: ' . $this->ReadPropertyString('Country')
-        ]);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        ];
 
-        $result = curl_exec($ch);
-        if ($result === false) {
-            $this->SLog('ERROR', 'API-Anfrage fehlgeschlagen', curl_error($ch));
-            curl_close($ch);
-            return false;
-        }
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        $this->SendDebug('ExecuteAction', 'Device: ' . $deviceId . ' Payload: ' . json_encode($actionData) . ' HTTP Code: ' . $httpCode . ' Result: ' . $result, 0);
-
-        if ($httpCode == 200 || $httpCode == 204) {
-            return true;
-        }
-
-        $resultData = @json_decode($result, true);
-        if ($httpCode == 400 && is_array($resultData) && isset($resultData['message']) && strpos($resultData['message'], 'is not available for device') !== false) {
-            $this->SLog('WARNING', 'Aktion aktuell nicht verfügbar (Miele API)', $resultData['message']);
-            return false;
-        }
-
-        $this->SLog('ERROR', 'Fehler beim Ausführen der Aktion (Miele API)', 'HTTP Code: ' . $httpCode . ' | Result: ' . $result);
-        return false;
+        $result = $this->HttpRequest($url, 'PUT', $headers, $actionData, 10);
+        return $result !== null;
     }
 
     /**
