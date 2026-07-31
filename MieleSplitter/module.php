@@ -1,14 +1,16 @@
-<?php
+﻿<?php
 
 declare(strict_types=1);
 
 require_once __DIR__ . '/../libs/Trait_SmartLog.php';
 require_once __DIR__ . '/../libs/Trait_SmartHttp.php';
+require_once __DIR__ . '/../libs/Trait_DeviceAvailability.php';
 
 class MieleSplitter extends IPSModuleStrict
 {
     use SmartLog_Trait;
     use SmartHttp_Trait;
+    use DeviceAvailability_Trait;
 
     // Miele API Base URL
     private const API_BASE = 'https://api.mcs3.miele.com';
@@ -30,6 +32,9 @@ class MieleSplitter extends IPSModuleStrict
                 @IPS_SetVariableCustomPresentation($childID, []);
             }
         }
+
+        $this->DA_RegisterAvailability(900);
+        $this->DA_RegisterWatchdog();
 
         // OAuth2 Credentials
         $this->RegisterPropertyString('ClientID', '');
@@ -57,25 +62,31 @@ class MieleSplitter extends IPSModuleStrict
     {
         parent::ApplyChanges();
 
-        if ($this->ReadPropertyString('ClientID') != '' && $this->ReadPropertyString('Username') != '') {
-            // Start token refresh timer
-            $this->SetTimerInterval('SM_TokenRefresh', self::TOKEN_CHECK_INTERVAL);
-
-            // Initial token acquisition and SSE setup
-            $token = $this->GetToken();
-            if ($token) {
-                $this->UpdateSSEClientConfig($token);
-                $this->SetStatus(102); // Active
-                $this->SetValue('SSEStatus', 'Verbunden');
-            } else {
-                $this->SetStatus(200); // Auth failed
-                $this->SetValue('SSEStatus', 'Authentifizierung fehlgeschlagen');
-            }
-        } else {
-            $this->SetTimerInterval('SM_TokenRefresh', 0);
-            $this->SetStatus(104); // Inactive
+        if (empty($this->ReadPropertyString('ClientID')) || empty($this->ReadPropertyString('Username'))) {
+            $this->SetStatus(104);
             $this->SetValue('SSEStatus', 'Nicht konfiguriert');
+            $this->DA_ApplyPresentation();
+            $this->SetTimerInterval('SM_TokenRefresh', 0);
+            $this->DA_StopWatchdog();
+            return;
         }
+
+        // Start token refresh timer
+        $this->SetTimerInterval('SM_TokenRefresh', self::TOKEN_CHECK_INTERVAL);
+
+        // Initial token acquisition and SSE setup
+        $token = $this->GetToken();
+        if ($token) {
+            $this->UpdateSSEClientConfig($token);
+            $this->SetStatus(102); // Active
+            $this->SetValue('SSEStatus', 'Verbunden');
+        } else {
+            $this->SetStatus(200); // Auth failed
+            $this->SetValue('SSEStatus', 'Authentifizierung fehlgeschlagen');
+            $this->DA_SetAvailable(false, 'Authentifizierung fehlgeschlagen');
+        }
+        
+        $this->DA_ApplyPresentation();
     }
 
     //==========================================================================
@@ -96,8 +107,9 @@ class MieleSplitter extends IPSModuleStrict
 
         switch ($eventType) {
             case 'ping':
-                // Heartbeat – connection is alive
+                // Heartbeat â€“ connection is alive
                 $this->SendDebug('SSE', 'PING received', 0);
+                $this->DA_ResetWatchdog(600);
                 break;
 
             case 'devices':
@@ -112,6 +124,8 @@ class MieleSplitter extends IPSModuleStrict
                     ];
                     $this->SendDataToChildren(json_encode($payload));
                     $this->SetStatus(102);
+                    $this->DA_SetAvailable(true);
+                    $this->DA_ResetWatchdog(600);
                     $this->SetValue('SSEStatus', 'Verbunden (letztes Update: ' . date('H:i:s') . ')');
                 }
                 break;
@@ -286,6 +300,7 @@ class MieleSplitter extends IPSModuleStrict
         $data = $this->HttpRequest(self::TOKEN_URL, 'POST', $headers, $postData, 10);
         if ($data === null) {
             $this->SetStatus(200); // Auth failed
+            $this->DA_SetAvailable(false, 'Authentifizierung fehlgeschlagen');
             return false;
         }
 
@@ -301,6 +316,7 @@ class MieleSplitter extends IPSModuleStrict
 
         $this->SLog('ERROR', 'Token-Anfrage fehlgeschlagen', 'Kein access_token im Response');
         $this->SetStatus(200); // Auth failed
+        $this->DA_SetAvailable(false, 'Authentifizierung fehlgeschlagen');
         return false;
     }
 
@@ -429,7 +445,7 @@ class MieleSplitter extends IPSModuleStrict
             $this->UpdateSSEClientConfig($token);
             echo "Authentifizierung erfolgreich! SSE-Verbindung wird aufgebaut.\n";
         } else {
-            echo "Authentifizierung fehlgeschlagen. Bitte Zugangsdaten prüfen.\n";
+            echo "Authentifizierung fehlgeschlagen. Bitte Zugangsdaten prÃ¼fen.\n";
         }
     }
 
@@ -444,8 +460,16 @@ class MieleSplitter extends IPSModuleStrict
             $this->SetValue('SSEStatus', 'Reconnect...');
             echo "SSE-Verbindung wird neu aufgebaut.\n";
         } else {
-            echo "Kein gültiger Token verfügbar.\n";
+            echo "Kein gÃ¼ltiger Token verfÃ¼gbar.\n";
         }
+    }
+
+    public function RequestAction(string $Ident, mixed $Value): void
+    {
+        match ($Ident) {
+            'DA_Watchdog' => $this->DA_HandleWatchdog(),
+            default => throw new Exception('Invalid Action: ' . $Ident)
+        };
     }
 
     //==========================================================================
@@ -470,7 +494,7 @@ class MieleSplitter extends IPSModuleStrict
     "elements": [
         {
             "type": "Label",
-            "caption": "Hey! Hier verbinden wir uns mit der Miele Cloud via Echtzeit-SSE-Stream. Trag einfach deine Zugangsdaten und die API-Schlüssel ein."
+            "caption": "Hey! Hier verbinden wir uns mit der Miele Cloud via Echtzeit-SSE-Stream. Trag einfach deine Zugangsdaten und die API-SchlÃ¼ssel ein."
         },
         {
             "type": "RowLayout",
@@ -512,7 +536,7 @@ class MieleSplitter extends IPSModuleStrict
                     "value": "de-DE"
                 },
                 {
-                    "caption": "Österreich",
+                    "caption": "Ã–sterreich",
                     "value": "de-AT"
                 },
                 {
@@ -523,7 +547,7 @@ class MieleSplitter extends IPSModuleStrict
         },
         {
             "type": "Label",
-            "caption": "ℹ️ Die Verbindung läuft über Server-Sent Events (SSE) – Statusänderungen kommen in Echtzeit, ohne Polling."
+            "caption": "â„¹ï¸ Die Verbindung lÃ¤uft Ã¼ber Server-Sent Events (SSE) â€“ StatusÃ¤nderungen kommen in Echtzeit, ohne Polling."
         }
     ],
     "actions": [
@@ -560,6 +584,16 @@ class MieleSplitter extends IPSModuleStrict
             "code": 202,
             "icon": "error",
             "caption": "SSE Verbindung getrennt"
+        },
+        {
+            "code": 203,
+            "icon": "inactive",
+            "caption": "SSE Verbindung unterbrochen"
+        },
+        {
+            "code": 204,
+            "icon": "error",
+            "caption": "Watchdog: Kein Signal"
         }
     ]
 }

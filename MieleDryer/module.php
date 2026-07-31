@@ -3,10 +3,12 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../libs/Trait_SmartLog.php';
+require_once __DIR__ . '/../libs/Trait_DeviceAvailability.php';
 
 class MieleDryer extends IPSModuleStrict
 {
     use SmartLog_Trait;
+    use DeviceAvailability_Trait;
 
 
     public function Create(): void{
@@ -20,6 +22,8 @@ class MieleDryer extends IPSModuleStrict
             }
         }
         $this->RegisterPropertyString('DeviceID', '');
+
+        $this->DA_RegisterAvailability(900);
 
         $this->RegisterAttributeFloat('LastEnergy', 0.0);
         $this->RegisterAttributeInteger('AnchorStartTime', 0);
@@ -69,7 +73,7 @@ class MieleDryer extends IPSModuleStrict
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => 'min',
             'ICON' => 'Clock'
-        ], 22);
+        ], 27);
         
         $this->RegisterVariableString('StartTime', 'Start um', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
@@ -88,12 +92,12 @@ class MieleDryer extends IPSModuleStrict
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => 's',
             'ICON' => 'Clock'
-        ], 28);
+        ], 29);
         $this->RegisterVariableInteger('ProgressPct', 'Arbeitsfortschritt', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => '%',
             'ICON' => 'Intensity'
-        ], 29);
+        ], 30);
         
         $this->RegisterVariableBoolean('Door', 'Tür', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
@@ -120,6 +124,11 @@ class MieleDryer extends IPSModuleStrict
 
     public function ApplyChanges(): void{
         parent::ApplyChanges();
+
+        if (empty($this->ReadPropertyString('DeviceID'))) {
+            $this->SetStatus(104);
+            return;
+        }
 
         // CustomPresentation: PowerSupply
         
@@ -206,6 +215,8 @@ class MieleDryer extends IPSModuleStrict
             'SHOW_PREVIEW' => true,
             'OPTIONS' => $doorOptions
         ]);
+
+        $this->DA_ApplyPresentation();
     }
 
     public function ReceiveData(string $JSONString): string
@@ -225,6 +236,7 @@ class MieleDryer extends IPSModuleStrict
             if ($type === 'DeviceUpdate' || $type === '') {
                 if (isset($data['Devices'][$deviceId])) {
                     $this->ProcessDeviceData($data['Devices'][$deviceId]);
+                    $this->DA_SetAvailable(true);
                 }
             }
             if ($type === 'ActionsUpdate' || $type === '') {
@@ -240,6 +252,9 @@ class MieleDryer extends IPSModuleStrict
     public function RequestAction(string $Ident, mixed $Value): void
     {
         switch ($Ident) {
+            case 'DA_Watchdog':
+                $this->DA_HandleWatchdog();
+                break;
             case 'PowerOn':
                 $action = $Value ? 'powerOn' : 'powerOff';
                 $this->SendAction([$action => true]);
@@ -440,8 +455,10 @@ class MieleDryer extends IPSModuleStrict
 
         if ($state && is_array($state) && !isset($state['message'])) {
             $this->ProcessDeviceData(['state'=> $state]);
+            $this->DA_SetAvailable(true);
             echo "Gerät erfolgreich aktualisiert!\n";
         } else {
+            $this->DA_SetAvailable(false, 'API-Fehler beim manuellen Update');
             if (isset($state['message'])) {
                 $this->SLog('ERROR', 'Miele Update-Fehler', $state['message'] ?? 'Unbekannter Fehler');
             } else {
@@ -486,6 +503,18 @@ class MieleDryer extends IPSModuleStrict
             "type": "Button",
             "caption": "Gerät aktualisieren",
             "onClick": "SM_UpdateDevice($id);"
+        }
+    ],
+    "status": [
+        {
+            "code": 104,
+            "icon": "inactive",
+            "caption": "Device ID nicht konfiguriert"
+        },
+        {
+            "code": 200,
+            "icon": "error",
+            "caption": "Fehler beim Datenabruf"
         }
     ]
 }

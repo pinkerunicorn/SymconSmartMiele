@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../libs/Trait_SmartLog.php';
 require_once __DIR__ . '/../libs/Trait_CentralStateAware.php';
+require_once __DIR__ . '/../libs/Trait_DeviceAvailability.php';
 
 class MieleHood extends IPSModuleStrict
 {
     use SmartLog_Trait;
     use CentralStateAware_Trait;
+    use DeviceAvailability_Trait;
 
     public function Create(): void
     {
@@ -22,6 +24,8 @@ class MieleHood extends IPSModuleStrict
         }
 
         $this->RegisterPropertyString('DeviceID', '');
+
+        $this->DA_RegisterAvailability(900);
 
         // Variables
         $this->RegisterVariableInteger('PowerSupply', 'Spannungsversorgung', [
@@ -84,6 +88,11 @@ class MieleHood extends IPSModuleStrict
     public function ApplyChanges(): void
     {
         parent::ApplyChanges();
+
+        if (empty($this->ReadPropertyString('DeviceID'))) {
+            $this->SetStatus(104);
+            return;
+        }
         
         $this->SubscribeToCentralStates(['FireplaceActive']);
 
@@ -188,6 +197,8 @@ class MieleHood extends IPSModuleStrict
         $this->EnableAction('Light');
         $this->EnableAction('AmbientLight');
         $this->EnableAction('VentilationStep');
+
+        $this->DA_ApplyPresentation();
     }
 
     //==========================================================================
@@ -226,6 +237,7 @@ class MieleHood extends IPSModuleStrict
         // Handle device state updates
         if (($type === 'DeviceUpdate' || !isset($data['Type'])) && isset($data['Devices'][$deviceId])) {
             $this->ProcessDeviceData($data['Devices'][$deviceId]);
+            $this->DA_SetAvailable(true);
         }
 
         // Handle actions updates – cache locally
@@ -311,6 +323,9 @@ class MieleHood extends IPSModuleStrict
         }
 
         switch ($Ident) {
+            case 'DA_Watchdog':
+                $this->DA_HandleWatchdog();
+                break;
             case 'PowerOn':
                 if ($Value && $this->GetCentralState('FireplaceActive')) {
                     echo "Fehler: Kamin ist aktiv! Dunstabzugshaube aus Sicherheitsgründen blockiert.\n";
@@ -505,8 +520,10 @@ class MieleHood extends IPSModuleStrict
 
         if ($state && is_array($state) && !isset($state['message'])) {
             $this->ProcessDeviceData(['state' => $state]);
+            $this->DA_SetAvailable(true);
             echo "Gerät erfolgreich aktualisiert!\n";
         } else {
+            $this->DA_SetAvailable(false, 'API-Fehler beim manuellen Update');
             if (isset($state['message'])) {
                 $this->SLog('ERROR', 'Miele Update-Fehler', $state['message'] ?? 'Unbekannter Fehler');
             } else {
@@ -560,6 +577,18 @@ class MieleHood extends IPSModuleStrict
             "type": "Button",
             "caption": "Gerät aktualisieren",
             "onClick": "SM_UpdateDevice($id);"
+        }
+    ],
+    "status": [
+        {
+            "code": 104,
+            "icon": "inactive",
+            "caption": "Device ID nicht konfiguriert"
+        },
+        {
+            "code": 200,
+            "icon": "error",
+            "caption": "Fehler beim Datenabruf"
         }
     ]
 }

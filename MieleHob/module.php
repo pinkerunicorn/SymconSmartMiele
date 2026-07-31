@@ -3,10 +3,12 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../libs/Trait_SmartLog.php';
+require_once __DIR__ . '/../libs/Trait_DeviceAvailability.php';
 
 class MieleHob extends IPSModuleStrict
 {
     use SmartLog_Trait;
+    use DeviceAvailability_Trait;
 
 
     public function Create(): void{
@@ -21,6 +23,8 @@ class MieleHob extends IPSModuleStrict
         
         $this->RegisterPropertyString('DeviceID', '');
         $this->RegisterPropertyInteger('PlateCount', 4);
+
+        $this->DA_RegisterAvailability(900);
 
         // Variables
         $this->RegisterVariableBoolean('IsActive', 'Kochfeld aktiv', [
@@ -39,7 +43,7 @@ class MieleHob extends IPSModuleStrict
         $this->RegisterVariableInteger('PowerSupply', 'Spannungsversorgung', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => 'Power'
-        ], 5);
+        ], 7);
 
         for ($i = 1; $i <= 5; $i++) {
             $this->RegisterVariableString('PlateStep' . $i, 'Leistungsstufe ' . $i, [
@@ -54,12 +58,17 @@ class MieleHob extends IPSModuleStrict
             $this->RegisterVariableString('Plate'. $i, 'Kochzone '. $i, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
                 'ICON' => 'Flame'
-            ], 20 + $i);
+            ], 24 + $i);
         }
     }
 
     public function ApplyChanges(): void{
         parent::ApplyChanges();
+
+        if (empty($this->ReadPropertyString('DeviceID'))) {
+            $this->SetStatus(104);
+            return;
+        }
 
         
         if (!IPS_VariableProfileExists('Miele.PowerSupply')) {
@@ -101,8 +110,10 @@ class MieleHob extends IPSModuleStrict
             $this->RegisterVariableString($ident, 'Kochzone '. $i, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
                 'ICON' => 'Flame'
-            ], 20 + $i);
+            ], 24 + $i);
         }
+
+        $this->DA_ApplyPresentation();
     }
 
     public function ReceiveData(string $JSONString): string
@@ -122,6 +133,7 @@ class MieleHob extends IPSModuleStrict
             if ($type === 'DeviceUpdate' || $type === '') {
                 if (isset($data['Devices'][$deviceId])) {
                     $this->ProcessDeviceData($data['Devices'][$deviceId]);
+                    $this->DA_SetAvailable(true);
                 }
             } elseif ($type === 'ActionsUpdate') {
                 // Das Kochfeld ist read-only, daher ignorieren wir ActionsUpdates
@@ -195,13 +207,24 @@ class MieleHob extends IPSModuleStrict
 
         if ($state && is_array($state) && !isset($state['message'])) {
             $this->ProcessDeviceData(['state'=> $state]);
+            $this->DA_SetAvailable(true);
             echo "Gerät erfolgreich aktualisiert!\n";
         } else {
+            $this->DA_SetAvailable(false, 'API-Fehler beim manuellen Update');
             if (isset($state['message'])) {
                 $this->SLog('ERROR', 'Miele Update-Fehler', $state['message'] ?? 'Unbekannter Fehler');
             } else {
                 echo "Fehler beim Update: Konnte keine Daten abrufen. Bitte API-Verbindung und Device ID prüfen.\n";
             }
+        }
+    }
+
+    public function RequestAction(string $Ident, mixed $Value): void
+    {
+        switch ($Ident) {
+            case 'DA_Watchdog':
+                $this->DA_HandleWatchdog();
+                break;
         }
     }
 
@@ -244,6 +267,18 @@ class MieleHob extends IPSModuleStrict
             "type": "Button",
             "caption": "Gerät aktualisieren",
             "onClick": "SM_UpdateDevice($id);"
+        }
+    ],
+    "status": [
+        {
+            "code": 104,
+            "icon": "inactive",
+            "caption": "Device ID nicht konfiguriert"
+        },
+        {
+            "code": 200,
+            "icon": "error",
+            "caption": "Fehler beim Datenabruf"
         }
     ]
 }

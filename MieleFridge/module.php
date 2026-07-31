@@ -3,10 +3,12 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../libs/Trait_SmartLog.php';
+require_once __DIR__ . '/../libs/Trait_DeviceAvailability.php';
 
 class MieleFridge extends IPSModuleStrict
 {
     use SmartLog_Trait;
+    use DeviceAvailability_Trait;
 
 
     public function Create(): void{
@@ -21,6 +23,8 @@ class MieleFridge extends IPSModuleStrict
         }
         $this->RegisterPropertyString('DeviceID', '');
         $this->RegisterPropertyBoolean('EnableSuperFreezing', false);
+
+        $this->DA_RegisterAvailability(900);
 
         // Variables
         $this->RegisterVariableString('StatusText', 'Status', [
@@ -69,6 +73,11 @@ class MieleFridge extends IPSModuleStrict
 
     public function ApplyChanges(): void{
         parent::ApplyChanges();
+
+        if (empty($this->ReadPropertyString('DeviceID'))) {
+            $this->SetStatus(104);
+            return;
+        }
 
         // CustomPresentation: SuperCooling
         $superCoolingOptions = json_encode([
@@ -124,6 +133,8 @@ class MieleFridge extends IPSModuleStrict
         $this->EnableAction('TargetTemp1');
         $this->EnableAction('SuperCooling');
         $this->EnableAction('SuperFreezing');
+
+        $this->DA_ApplyPresentation();
     }
 
     public function ReceiveData(string $JSONString): string
@@ -143,6 +154,7 @@ class MieleFridge extends IPSModuleStrict
             if ($type === 'DeviceUpdate') {
                 if (isset($data['Devices'][$deviceId])) {
                     $this->ProcessDeviceData($data['Devices'][$deviceId]);
+                    $this->DA_SetAvailable(true);
                 }
             } elseif ($type === 'ActionsUpdate') {
                 if (isset($data['Actions'][$deviceId])) {
@@ -221,8 +233,10 @@ class MieleFridge extends IPSModuleStrict
 
         if ($state && is_array($state) && !isset($state['message'])) {
             $this->ProcessDeviceData(['state'=> $state]);
+            $this->DA_SetAvailable(true);
             echo "Gerät erfolgreich aktualisiert!\n";
         } else {
+            $this->DA_SetAvailable(false, 'API-Fehler beim manuellen Update');
             if (isset($state['message'])) {
                 $this->SLog('ERROR', 'Miele Update-Fehler', $state['message'] ?? 'Unbekannter Fehler');
             } else {
@@ -241,6 +255,9 @@ class MieleFridge extends IPSModuleStrict
         $actionData = [];
 
         switch ($Ident) {
+            case 'DA_Watchdog':
+                $this->DA_HandleWatchdog();
+                break;
             case 'TargetTemp1':
                 $actionData['targetTemperature'] = [
                     [
@@ -318,6 +335,18 @@ class MieleFridge extends IPSModuleStrict
             "type": "Button",
             "caption": "Gerät aktualisieren",
             "onClick": "SM_UpdateDevice($id);"
+        }
+    ],
+    "status": [
+        {
+            "code": 104,
+            "icon": "inactive",
+            "caption": "Device ID nicht konfiguriert"
+        },
+        {
+            "code": 200,
+            "icon": "error",
+            "caption": "Fehler beim Datenabruf"
         }
     ]
 }

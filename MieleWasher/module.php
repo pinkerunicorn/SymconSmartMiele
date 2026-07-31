@@ -3,10 +3,12 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../libs/Trait_SmartLog.php';
+require_once __DIR__ . '/../libs/Trait_DeviceAvailability.php';
 
 class MieleWasher extends IPSModuleStrict
 {
     use SmartLog_Trait;
+    use DeviceAvailability_Trait;
 
 
     public function Create(): void{
@@ -19,8 +21,10 @@ class MieleWasher extends IPSModuleStrict
                 @IPS_SetVariableCustomPresentation($childID, []);
             }
         }
-$this->RegisterPropertyString('DeviceID', '');
+        $this->RegisterPropertyString('DeviceID', '');
         $this->RegisterPropertyBoolean('EnableTwinDos', true);
+
+        $this->DA_RegisterAvailability(900);
 
         $this->RegisterAttributeInteger('LastTwinDos1', 0);
         $this->RegisterAttributeInteger('LastTwinDos2', 0);
@@ -75,7 +79,7 @@ $this->RegisterPropertyString('DeviceID', '');
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => 'min',
             'ICON' => 'Clock'
-        ], 22);
+        ], 27);
         
         $this->RegisterVariableString('StartTime', 'Start um', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
@@ -94,12 +98,12 @@ $this->RegisterPropertyString('DeviceID', '');
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => 's',
             'ICON' => 'Clock'
-        ], 28);
+        ], 29);
         $this->RegisterVariableInteger('ProgressPct', 'Arbeitsfortschritt', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => '%',
             'ICON' => 'Intensity'
-        ], 29);
+        ], 30);
         
         $this->RegisterVariableInteger('Temperature', 'Temperatur', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
@@ -152,6 +156,11 @@ $this->RegisterPropertyString('DeviceID', '');
 
     public function ApplyChanges(): void{
         parent::ApplyChanges();
+
+        if (empty($this->ReadPropertyString('DeviceID'))) {
+            $this->SetStatus(104);
+            return;
+        }
 
         // ProcessAction: Legacy-Profil noetig, da Wertanzeige nicht mit EnableAction kompatibel ist
         if (!IPS_VariableProfileExists('SM.Miele.ProcessAction')) {
@@ -238,6 +247,8 @@ $this->RegisterPropertyString('DeviceID', '');
             'SHOW_PREVIEW' => true,
             'OPTIONS' => $signalFailureOptions
         ]);
+
+        $this->DA_ApplyPresentation();
     }
 
     public function ReceiveData(string $JSONString): string
@@ -255,6 +266,7 @@ $this->RegisterPropertyString('DeviceID', '');
             $type = $data['Type'] ?? '';
             if (($type === 'DeviceUpdate' || !isset($data['Type'])) && isset($data['Devices'][$deviceId])) {
                 $this->ProcessDeviceData($data['Devices'][$deviceId]);
+                $this->DA_SetAvailable(true);
                 
                 if ($this->ReadPropertyBoolean('EnableTwinDos')) {
                     $this->FetchFillingLevels($deviceId);
@@ -496,6 +508,7 @@ $this->RegisterPropertyString('DeviceID', '');
 
         if ($state && is_array($state) && !isset($state['message'])) {
             $this->ProcessDeviceData(['state'=> $state]);
+            $this->DA_SetAvailable(true);
             
             if ($this->ReadPropertyBoolean('EnableTwinDos')) {
                 $this->FetchFillingLevels($deviceId);
@@ -503,6 +516,7 @@ $this->RegisterPropertyString('DeviceID', '');
             
             echo "Gerät erfolgreich aktualisiert!\n";
         } else {
+            $this->DA_SetAvailable(false, 'API-Fehler beim manuellen Update');
             if (isset($state['message'])) {
                 $this->SLog('ERROR', 'Miele Update-Fehler', $state['message'] ?? 'Unbekannter Fehler');
             } else {
@@ -521,6 +535,9 @@ $this->RegisterPropertyString('DeviceID', '');
     public function RequestAction(string $Ident, mixed $Value): void
     {
         switch ($Ident) {
+            case 'DA_Watchdog':
+                $this->DA_HandleWatchdog();
+                break;
             case 'PowerOn':
                 if ($Value) {
                     $this->SendAction(['powerOn' => true]);
@@ -590,10 +607,20 @@ $this->RegisterPropertyString('DeviceID', '');
             "caption": "Gerät aktualisieren",
             "onClick": "SM_UpdateDevice($id);"
         }
+    ],
+    "status": [
+        {
+            "code": 104,
+            "icon": "inactive",
+            "caption": "Device ID nicht konfiguriert"
+        },
+        {
+            "code": 200,
+            "icon": "error",
+            "caption": "Fehler beim Datenabruf"
+        }
     ]
 }
 EOT;
     }
 }
-
-
