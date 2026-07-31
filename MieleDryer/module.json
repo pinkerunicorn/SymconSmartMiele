@@ -2,7 +2,7 @@
     "id": "{8333D436-95EF-4FD1-8620-705393C466AE}",
     "name": "Miele Dryer",
     "type": 3,
-    "vendor": "Florian Graßinger",
+    "vendor": "Florian Gra\u00dfinger",
     "aliases": [
         "Miele Dryer"
     ],
@@ -14,6 +14,6 @@
         "{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}"
     ],
     "prefix": "SM",
-    "author": "Florian Graßinger",
-    "url": "https://github.com/pinkerunicorn/"
+    "author": "Florian Gra\u00dfinger",
+    "url": "https://github.com/pinkerunicorn/SymconSmartMiele/tree/main/MieleDryer"
 }

@@ -2,7 +2,7 @@
     "id": "{C8151DDF-F85F-41AB-8EBA-5D43386D61A3}",
     "name": "Miele Hood",
     "type": 3,
-    "vendor": "Florian Graßinger",
+    "vendor": "Florian Gra\u00dfinger",
     "aliases": [
         "Miele Hood"
     ],
@@ -14,6 +14,6 @@
         "{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}"
     ],
     "prefix": "SM",
-    "author": "Florian Graßinger",
-    "url": "https://github.com/pinkerunicorn/"
+    "author": "Florian Gra\u00dfinger",
+    "url": "https://github.com/pinkerunicorn/SymconSmartMiele/tree/main/MieleHood"
 }

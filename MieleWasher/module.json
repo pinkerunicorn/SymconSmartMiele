@@ -2,7 +2,7 @@
     "id": "{6FDD3FCD-8EF9-4DC7-BCFA-7D5626111B98}",
     "name": "Miele Washer",
     "type": 3,
-    "vendor": "Florian Graßinger",
+    "vendor": "Florian Gra\u00dfinger",
     "aliases": [
         "Miele Washer"
     ],
@@ -14,6 +14,6 @@
         "{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}"
     ],
     "prefix": "SM",
-    "author": "Florian Graßinger",
-    "url": "https://github.com/pinkerunicorn/"
+    "author": "Florian Gra\u00dfinger",
+    "url": "https://github.com/pinkerunicorn/SymconSmartMiele/tree/main/MieleWasher"
 }
