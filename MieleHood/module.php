@@ -16,13 +16,6 @@ class MieleHood extends IPSModuleStrict
     {
         parent::Create();
 
-        // Self-healing for corrupted CustomPresentations
-        foreach (@IPS_GetChildrenIDs($this->InstanceID) as $childID) {
-            if (@IPS_VariableExists($childID)) {
-                @IPS_SetVariableCustomPresentation($childID, []);
-            }
-        }
-
         $this->RegisterPropertyString('DeviceID', '');
 
         $this->DA_RegisterAvailability(900);
@@ -39,19 +32,19 @@ class MieleHood extends IPSModuleStrict
         ], 10);
 
         $this->RegisterVariableBoolean('PowerOn', 'Eingeschaltet', [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
             'ICON' => 'Power'
         ], 15);
         $this->EnableAction('PowerOn');
 
         $this->RegisterVariableBoolean('Light', 'Licht', [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
             'ICON' => 'Bulb'
         ], 20);
         $this->EnableAction('Light');
 
         $this->RegisterVariableBoolean('AmbientLight', 'Stimmungslicht', [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
             'ICON' => 'Bulb'
         ], 25);
         $this->EnableAction('AmbientLight');
@@ -105,50 +98,26 @@ class MieleHood extends IPSModuleStrict
         IPS_SetVariableProfileAssociation('Miele.PowerSupply', 1, 'Eingeschaltet', 'Power', 0x00CC00);
         IPS_SetVariableProfileAssociation('Miele.PowerSupply', 2, 'Ausgeschaltet', 'Power', 0xFF0000);
 
-        $powerOnOptions = json_encode([
-            ['Value' => false, 'Caption' => 'Aus', 'IconValue' => 'Power', 'IconActive' => true, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
-            ['Value' => true, 'Caption' => 'Ein', 'IconValue' => 'Power', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00CC00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00CC00]
-        ]);
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('PowerOn'), [
-            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
-            'ICON' => 'Power',
-            'COLOR' => -1,
-            'CONTENT_COLOR' => -1,
-            'DISPLAY_TYPE' => 0,
-            'PREVIEW_STYLE' => 1,
-            'SHOW_PREVIEW' => true,
-            'OPTIONS' => $powerOnOptions
-        ]);
+        if (!IPS_VariableProfileExists('Miele.PowerOn')) {
+            IPS_CreateVariableProfile('Miele.PowerOn', 0);
+            IPS_SetVariableProfileAssociation('Miele.PowerOn', false, 'Aus', 'Power', -1);
+            IPS_SetVariableProfileAssociation('Miele.PowerOn', true, 'Ein', 'Power', 0x00CC00);
+        }
+        IPS_SetVariableCustomProfile($this->GetIDForIdent('PowerOn'), 'Miele.PowerOn');
 
-        $lightOptions = json_encode([
-            ['Value' => false, 'Caption' => 'Aus', 'IconValue' => 'Light', 'IconActive' => true, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
-            ['Value' => true, 'Caption' => 'An', 'IconValue' => 'Light', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFFCC00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFFCC00]
-        ]);
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('Light'), [
-            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
-            'ICON' => 'Light',
-            'COLOR' => -1,
-            'CONTENT_COLOR' => -1,
-            'DISPLAY_TYPE' => 0,
-            'PREVIEW_STYLE' => 1,
-            'SHOW_PREVIEW' => true,
-            'OPTIONS' => $lightOptions
-        ]);
+        if (!IPS_VariableProfileExists('Miele.Light')) {
+            IPS_CreateVariableProfile('Miele.Light', 0);
+            IPS_SetVariableProfileAssociation('Miele.Light', false, 'Aus', 'Light', -1);
+            IPS_SetVariableProfileAssociation('Miele.Light', true, 'An', 'Light', 0xFFCC00);
+        }
+        IPS_SetVariableCustomProfile($this->GetIDForIdent('Light'), 'Miele.Light');
 
-        $ambientLightOptions = json_encode([
-            ['Value' => false, 'Caption' => 'Aus', 'IconValue' => 'Paintbrush', 'IconActive' => true, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
-            ['Value' => true, 'Caption' => 'An', 'IconValue' => 'Paintbrush', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xCC00FF, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xCC00FF]
-        ]);
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('AmbientLight'), [
-            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
-            'ICON' => 'Paintbrush',
-            'COLOR' => -1,
-            'CONTENT_COLOR' => -1,
-            'DISPLAY_TYPE' => 0,
-            'PREVIEW_STYLE' => 1,
-            'SHOW_PREVIEW' => true,
-            'OPTIONS' => $ambientLightOptions
-        ]);
+        if (!IPS_VariableProfileExists('Miele.AmbientLight')) {
+            IPS_CreateVariableProfile('Miele.AmbientLight', 0);
+            IPS_SetVariableProfileAssociation('Miele.AmbientLight', false, 'Aus', 'Paintbrush', -1);
+            IPS_SetVariableProfileAssociation('Miele.AmbientLight', true, 'An', 'Paintbrush', 0xCC00FF);
+        }
+        IPS_SetVariableCustomProfile($this->GetIDForIdent('AmbientLight'), 'Miele.AmbientLight');
 
         $signalInfoOptions = json_encode([
             ['Value' => false, 'Caption' => 'Kein Hinweis', 'IconValue' => 'Information', 'IconActive' => true, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
@@ -210,7 +179,7 @@ class MieleHood extends IPSModuleStrict
         if ($this->HandleCentralStateMessage($SenderID, $Message, $Data)) return;
     }
 
-    private function OnCentralStateChanged(string $stateName, mixed $newValue): void
+    protected function OnCentralStateChanged(string $stateName, mixed $newValue): void
     {
         if ($stateName === 'FireplaceActive' && $newValue) {
             $this->Log('Kamin ist aktiv! Schalte Dunstabzugshaube zur Sicherheit aus.');

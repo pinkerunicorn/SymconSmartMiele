@@ -14,13 +14,6 @@ class MieleHob extends IPSModuleStrict
     public function Create(): void{
         parent::Create();
         
-        // Self-healing for corrupted CustomPresentations
-        foreach (@IPS_GetChildrenIDs($this->InstanceID) as $childID) {
-            if (@IPS_VariableExists($childID)) {
-                @IPS_SetVariableCustomPresentation($childID, []);
-            }
-        }
-        
         $this->RegisterPropertyString('DeviceID', '');
         $this->RegisterPropertyInteger('PlateCount', 4);
 

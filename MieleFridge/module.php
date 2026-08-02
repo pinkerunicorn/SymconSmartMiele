@@ -15,12 +15,6 @@ class MieleFridge extends IPSModuleStrict
         parent::Create();
         
         
-        // Self-healing for corrupted CustomPresentations
-        foreach (@IPS_GetChildrenIDs($this->InstanceID) as $childID) {
-            if (@IPS_VariableExists($childID)) {
-                @IPS_SetVariableCustomPresentation($childID, []);
-            }
-        }
         $this->RegisterPropertyString('DeviceID', '');
         $this->RegisterPropertyBoolean('EnableSuperFreezing', false);
 
@@ -53,7 +47,7 @@ class MieleFridge extends IPSModuleStrict
         ], 30);
 
         $this->RegisterVariableBoolean('SuperCooling', 'Schnellkühlen', [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
             'ICON' => 'Power'
         ], 35);
         $this->EnableAction('SuperCooling');
@@ -61,7 +55,7 @@ class MieleFridge extends IPSModuleStrict
         // SuperFreezing nur registrieren wenn in Config aktiviert
         if ($this->ReadPropertyBoolean('EnableSuperFreezing')) {
             $this->RegisterVariableBoolean('SuperFreezing', 'Schnellgefrieren', [
-                'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
                 'ICON' => 'Snowflake'
             ], 36);
             $this->EnableAction('SuperFreezing');
@@ -79,38 +73,20 @@ class MieleFridge extends IPSModuleStrict
             return;
         }
 
-        // CustomPresentation: SuperCooling
-        $superCoolingOptions = json_encode([
-            ['Value' => false, 'Caption' => 'Aus', 'IconValue' => 'Snowflake', 'IconActive' => false, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
-            ['Value' => true, 'Caption' => 'Aktiv', 'IconValue' => 'Snowflake', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00BFFF, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00BFFF]
-        ]);
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('SuperCooling'), [
-            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
-            'ICON' => 'Snowflake',
-            'COLOR' => -1,
-            'CONTENT_COLOR' => -1,
-            'DISPLAY_TYPE' => 0,
-            'PREVIEW_STYLE' => 1,
-            'SHOW_PREVIEW' => true,
-            'OPTIONS' => $superCoolingOptions
-        ]);
+        if (!IPS_VariableProfileExists('Miele.SuperCooling')) {
+            IPS_CreateVariableProfile('Miele.SuperCooling', 0);
+            IPS_SetVariableProfileAssociation('Miele.SuperCooling', false, 'Aus', 'Snowflake', -1);
+            IPS_SetVariableProfileAssociation('Miele.SuperCooling', true, 'Aktiv', 'Snowflake', 0x00BFFF);
+        }
+        IPS_SetVariableCustomProfile($this->GetIDForIdent('SuperCooling'), 'Miele.SuperCooling');
 
-        // CustomPresentation: SuperFreezing
         if ($this->ReadPropertyBoolean('EnableSuperFreezing')) {
-            $superFreezingOptions = json_encode([
-                ['Value' => false, 'Caption' => 'Aus', 'IconValue' => 'Snowflake', 'IconActive' => false, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
-                ['Value' => true, 'Caption' => 'Aktiv', 'IconValue' => 'Snowflake', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x0066CC, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x0066CC]
-            ]);
-            IPS_SetVariableCustomPresentation($this->GetIDForIdent('SuperFreezing'), [
-                'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
-                'ICON' => 'Snowflake',
-                'COLOR' => -1,
-                'CONTENT_COLOR' => -1,
-                'DISPLAY_TYPE' => 0,
-                'PREVIEW_STYLE' => 1,
-                'SHOW_PREVIEW' => true,
-                'OPTIONS' => $superFreezingOptions
-            ]);
+            if (!IPS_VariableProfileExists('Miele.SuperFreezing')) {
+                IPS_CreateVariableProfile('Miele.SuperFreezing', 0);
+                IPS_SetVariableProfileAssociation('Miele.SuperFreezing', false, 'Aus', 'Snowflake', -1);
+                IPS_SetVariableProfileAssociation('Miele.SuperFreezing', true, 'Aktiv', 'Snowflake', 0x0066CC);
+            }
+            IPS_SetVariableCustomProfile($this->GetIDForIdent('SuperFreezing'), 'Miele.SuperFreezing');
         }
 
         // CustomPresentation: Tür
@@ -132,7 +108,9 @@ class MieleFridge extends IPSModuleStrict
         // Aktionen nach CustomPresentation re-aktivieren
         $this->EnableAction('TargetTemp1');
         $this->EnableAction('SuperCooling');
-        $this->EnableAction('SuperFreezing');
+        if (@$this->GetIDForIdent('SuperFreezing') !== false) {
+            $this->EnableAction('SuperFreezing');
+        }
 
         $this->DA_ApplyPresentation();
     }

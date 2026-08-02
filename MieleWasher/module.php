@@ -15,12 +15,6 @@ class MieleWasher extends IPSModuleStrict
         parent::Create();
         
         
-        // Self-healing for corrupted CustomPresentations
-        foreach (@IPS_GetChildrenIDs($this->InstanceID) as $childID) {
-            if (@IPS_VariableExists($childID)) {
-                @IPS_SetVariableCustomPresentation($childID, []);
-            }
-        }
         $this->RegisterPropertyString('DeviceID', '');
         $this->RegisterPropertyBoolean('EnableTwinDos', true);
 
@@ -42,7 +36,7 @@ class MieleWasher extends IPSModuleStrict
         ], 5);
 
         $this->RegisterVariableBoolean('PowerOn', 'Eingeschaltet', [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
             'ICON' => 'Power'
         ], 8);
         $this->EnableAction('PowerOn');
@@ -200,21 +194,12 @@ class MieleWasher extends IPSModuleStrict
         IPS_SetVariableProfileAssociation('Miele.PowerSupply', 1, 'Eingeschaltet', 'Power', 0x00CC00);
         IPS_SetVariableProfileAssociation('Miele.PowerSupply', 2, 'Ausgeschaltet', 'Power', 0xFF0000);
 
-        // CustomPresentation: PowerOn
-        $powerOnOptions = json_encode([
-            ['Value' => false, 'Caption' => 'Aus', 'IconValue' => 'Power', 'IconActive' => false, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
-            ['Value' => true, 'Caption' => 'Ein', 'IconValue' => 'Power', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00CC00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00CC00]
-        ]);
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('PowerOn'), [
-            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
-            'ICON' => 'Power',
-            'COLOR' => -1,
-            'CONTENT_COLOR' => -1,
-            'DISPLAY_TYPE' => 0,
-            'PREVIEW_STYLE' => 1,
-            'SHOW_PREVIEW' => true,
-            'OPTIONS' => $powerOnOptions
-        ]);
+        if (!IPS_VariableProfileExists('Miele.PowerOn')) {
+            IPS_CreateVariableProfile('Miele.PowerOn', 0);
+            IPS_SetVariableProfileAssociation('Miele.PowerOn', false, 'Aus', 'Power', -1);
+            IPS_SetVariableProfileAssociation('Miele.PowerOn', true, 'Ein', 'Power', 0x00CC00);
+        }
+        IPS_SetVariableCustomProfile($this->GetIDForIdent('PowerOn'), 'Miele.PowerOn');
 
         // CustomPresentation: SignalInfo
         $signalInfoOptions = json_encode([
