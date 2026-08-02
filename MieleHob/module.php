@@ -64,13 +64,22 @@ class MieleHob extends IPSModuleStrict
         }
 
         
-        if (!IPS_VariableProfileExists('Miele.PowerSupply')) {
-            IPS_CreateVariableProfile('Miele.PowerSupply', 1);
+        $powerSupplyIntervals = json_encode([
+            [ 'IntervalMinValue' => 0, 'IntervalMaxValue' => 1, 'ConstantActive' => true, 'ConstantValue' => 'Unbekannt', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'Power', 'ColorActive' => true, 'ColorValue' => -1, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ],
+            [ 'IntervalMinValue' => 1, 'IntervalMaxValue' => 2, 'ConstantActive' => true, 'ConstantValue' => 'Eingeschaltet', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'Power', 'ColorActive' => true, 'ColorValue' => 0x00CC00, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ],
+            [ 'IntervalMinValue' => 2, 'IntervalMaxValue' => 3, 'ConstantActive' => true, 'ConstantValue' => 'Ausgeschaltet', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'Power', 'ColorActive' => true, 'ColorValue' => 0xFF0000, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ]
+        ]);
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('PowerSupply'), [
+            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
+            'ICON' => 'Power',
+            'INTERVALS_ACTIVE' => true,
+            'INTERVALS' => $powerSupplyIntervals
+        ]);
+        IPS_SetVariableCustomProfile($this->GetIDForIdent('PowerSupply'), '');
+        
+        if (IPS_VariableProfileExists('Miele.PowerSupply')) {
+            IPS_DeleteVariableProfile('Miele.PowerSupply');
         }
-        IPS_SetVariableCustomProfile($this->GetIDForIdent('PowerSupply'), 'Miele.PowerSupply');
-        IPS_SetVariableProfileAssociation('Miele.PowerSupply', 0, 'Unbekannt', 'Power', -1);
-        IPS_SetVariableProfileAssociation('Miele.PowerSupply', 1, 'Eingeschaltet', 'Power', 0x00CC00);
-        IPS_SetVariableProfileAssociation('Miele.PowerSupply', 2, 'Ausgeschaltet', 'Power', 0xFF0000);
 
         $isActiveOptions = json_encode([
             ['Value' => false, 'Caption' => 'Inaktiv', 'IconValue' => 'Flame', 'IconActive' => true, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],

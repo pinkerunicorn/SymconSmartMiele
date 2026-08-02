@@ -42,10 +42,17 @@ class MieleWasher extends IPSModuleStrict
         $this->EnableAction('PowerOn');
 
         // Aktion als Dropdown
-        $this->RegisterVariableInteger('ProcessAction', 'Aktion', [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Execute'
-        ], 9);
+        $processActionPres = [
+            'PRESENTATION' => VARIABLE_PRESENTATION_ENUMERATION,
+            'ICON' => 'Execute',
+            'OPTIONS' => json_encode([
+                ['Value' => 0, 'Caption' => 'Keine Aktion', 'IconActive' => false, 'IconValue' => '', 'Color' => -1],
+                ['Value' => 1, 'Caption' => 'Start', 'IconActive' => true, 'IconValue' => 'Execute', 'Color' => 0x00CC00],
+                ['Value' => 2, 'Caption' => 'Stop', 'IconActive' => true, 'IconValue' => 'Close', 'Color' => 0xFF0000],
+                ['Value' => 3, 'Caption' => 'Pause', 'IconActive' => true, 'IconValue' => 'Clock', 'Color' => 0xFFAA00]
+            ])
+        ];
+        $this->RegisterVariableInteger('ProcessAction', 'Aktion', $processActionPres, 9);
         $this->EnableAction('ProcessAction');
         $this->RegisterVariableString('StatusText', 'Status', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
@@ -156,15 +163,7 @@ class MieleWasher extends IPSModuleStrict
             return;
         }
 
-        // ProcessAction: Legacy-Profil noetig, da Wertanzeige nicht mit EnableAction kompatibel ist
-        if (!IPS_VariableProfileExists('SM.Miele.ProcessAction')) {
-            IPS_CreateVariableProfile('SM.Miele.ProcessAction', 1);
-            IPS_SetVariableProfileAssociation('SM.Miele.ProcessAction', 0, 'Keine Aktion', '', -1);
-            IPS_SetVariableProfileAssociation('SM.Miele.ProcessAction', 1, 'Start', 'Execute', 0x00CC00);
-            IPS_SetVariableProfileAssociation('SM.Miele.ProcessAction', 2, 'Stop', 'Close', 0xFF0000);
-            IPS_SetVariableProfileAssociation('SM.Miele.ProcessAction', 3, 'Pause', 'Clock', 0xFFAA00);
-        }
-        IPS_SetVariableCustomProfile($this->GetIDForIdent('ProcessAction'), 'SM.Miele.ProcessAction');
+        IPS_SetVariableCustomProfile($this->GetIDForIdent('ProcessAction'), '');
         $this->EnableAction('ProcessAction');
         $this->EnableAction('PowerOn');
 
@@ -185,21 +184,30 @@ class MieleWasher extends IPSModuleStrict
         ]);
 
         // CustomPresentation: PowerSupply
+        $powerSupplyIntervals = json_encode([
+            [ 'IntervalMinValue' => 0, 'IntervalMaxValue' => 1, 'ConstantActive' => true, 'ConstantValue' => 'Unbekannt', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'Power', 'ColorActive' => true, 'ColorValue' => -1, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ],
+            [ 'IntervalMinValue' => 1, 'IntervalMaxValue' => 2, 'ConstantActive' => true, 'ConstantValue' => 'Eingeschaltet', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'Power', 'ColorActive' => true, 'ColorValue' => 0x00CC00, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ],
+            [ 'IntervalMinValue' => 2, 'IntervalMaxValue' => 3, 'ConstantActive' => true, 'ConstantValue' => 'Ausgeschaltet', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'Power', 'ColorActive' => true, 'ColorValue' => 0xFF0000, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ]
+        ]);
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('PowerSupply'), [
+            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
+            'ICON' => 'Power',
+            'INTERVALS_ACTIVE' => true,
+            'INTERVALS' => $powerSupplyIntervals
+        ]);
+        IPS_SetVariableCustomProfile($this->GetIDForIdent('PowerSupply'), '');
+        IPS_SetVariableCustomProfile($this->GetIDForIdent('PowerOn'), '');
         
-        if (!IPS_VariableProfileExists('Miele.PowerSupply')) {
-            IPS_CreateVariableProfile('Miele.PowerSupply', 1);
+        // Migration: Delete legacy profiles
+        if (IPS_VariableProfileExists('Miele.PowerSupply')) {
+            IPS_DeleteVariableProfile('Miele.PowerSupply');
         }
-        IPS_SetVariableCustomProfile($this->GetIDForIdent('PowerSupply'), 'Miele.PowerSupply');
-        IPS_SetVariableProfileAssociation('Miele.PowerSupply', 0, 'Unbekannt', 'Power', -1);
-        IPS_SetVariableProfileAssociation('Miele.PowerSupply', 1, 'Eingeschaltet', 'Power', 0x00CC00);
-        IPS_SetVariableProfileAssociation('Miele.PowerSupply', 2, 'Ausgeschaltet', 'Power', 0xFF0000);
-
-        if (!IPS_VariableProfileExists('Miele.PowerOn')) {
-            IPS_CreateVariableProfile('Miele.PowerOn', 0);
-            IPS_SetVariableProfileAssociation('Miele.PowerOn', false, 'Aus', 'Power', -1);
-            IPS_SetVariableProfileAssociation('Miele.PowerOn', true, 'Ein', 'Power', 0x00CC00);
+        if (IPS_VariableProfileExists('Miele.PowerOn')) {
+            IPS_DeleteVariableProfile('Miele.PowerOn');
         }
-        IPS_SetVariableCustomProfile($this->GetIDForIdent('PowerOn'), 'Miele.PowerOn');
+        if (IPS_VariableProfileExists('SM.Miele.ProcessAction')) {
+            IPS_DeleteVariableProfile('SM.Miele.ProcessAction');
+        }
 
         // CustomPresentation: SignalInfo
         $signalInfoOptions = json_encode([

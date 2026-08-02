@@ -50,10 +50,18 @@ class MieleHood extends IPSModuleStrict
         $this->EnableAction('AmbientLight');
 
         // Lüfterstufe als Dropdown
-        $this->RegisterVariableInteger('VentilationStep', 'Lüfterstufe', [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Ventilator'
-        ], 30);
+        $ventilationPres = [
+            'PRESENTATION' => VARIABLE_PRESENTATION_ENUMERATION,
+            'ICON' => 'Ventilator',
+            'OPTIONS' => json_encode([
+                ['Value' => 0, 'Caption' => 'Aus', 'IconActive' => false, 'IconValue' => '', 'Color' => -1],
+                ['Value' => 1, 'Caption' => 'Stufe 1', 'IconActive' => true, 'IconValue' => 'Ventilator', 'Color' => 0x00CC00],
+                ['Value' => 2, 'Caption' => 'Stufe 2', 'IconActive' => true, 'IconValue' => 'Ventilator', 'Color' => 0xFFAA00],
+                ['Value' => 3, 'Caption' => 'Stufe 3', 'IconActive' => true, 'IconValue' => 'Ventilator', 'Color' => 0xFF6600],
+                ['Value' => 4, 'Caption' => 'Booster', 'IconActive' => true, 'IconValue' => 'Ventilator', 'Color' => 0xFF0000]
+            ])
+        ];
+        $this->RegisterVariableInteger('VentilationStep', 'Lüfterstufe', $ventilationPres, 30);
         $this->EnableAction('VentilationStep');
 
         $this->RegisterVariableBoolean('SignalInfo', 'Hinweis vorhanden (z.B. Filter)', [
@@ -90,34 +98,21 @@ class MieleHood extends IPSModuleStrict
         $this->SubscribeToCentralStates(['FireplaceActive']);
 
         
-        if (!IPS_VariableProfileExists('Miele.PowerSupply')) {
-            IPS_CreateVariableProfile('Miele.PowerSupply', 1);
-        }
-        IPS_SetVariableCustomProfile($this->GetIDForIdent('PowerSupply'), 'Miele.PowerSupply');
-        IPS_SetVariableProfileAssociation('Miele.PowerSupply', 0, 'Unbekannt', 'Power', -1);
-        IPS_SetVariableProfileAssociation('Miele.PowerSupply', 1, 'Eingeschaltet', 'Power', 0x00CC00);
-        IPS_SetVariableProfileAssociation('Miele.PowerSupply', 2, 'Ausgeschaltet', 'Power', 0xFF0000);
-
-        if (!IPS_VariableProfileExists('Miele.PowerOn')) {
-            IPS_CreateVariableProfile('Miele.PowerOn', 0);
-            IPS_SetVariableProfileAssociation('Miele.PowerOn', false, 'Aus', 'Power', -1);
-            IPS_SetVariableProfileAssociation('Miele.PowerOn', true, 'Ein', 'Power', 0x00CC00);
-        }
-        IPS_SetVariableCustomProfile($this->GetIDForIdent('PowerOn'), 'Miele.PowerOn');
-
-        if (!IPS_VariableProfileExists('Miele.Light')) {
-            IPS_CreateVariableProfile('Miele.Light', 0);
-            IPS_SetVariableProfileAssociation('Miele.Light', false, 'Aus', 'Light', -1);
-            IPS_SetVariableProfileAssociation('Miele.Light', true, 'An', 'Light', 0xFFCC00);
-        }
-        IPS_SetVariableCustomProfile($this->GetIDForIdent('Light'), 'Miele.Light');
-
-        if (!IPS_VariableProfileExists('Miele.AmbientLight')) {
-            IPS_CreateVariableProfile('Miele.AmbientLight', 0);
-            IPS_SetVariableProfileAssociation('Miele.AmbientLight', false, 'Aus', 'Paintbrush', -1);
-            IPS_SetVariableProfileAssociation('Miele.AmbientLight', true, 'An', 'Paintbrush', 0xCC00FF);
-        }
-        IPS_SetVariableCustomProfile($this->GetIDForIdent('AmbientLight'), 'Miele.AmbientLight');
+        $powerSupplyIntervals = json_encode([
+            [ 'IntervalMinValue' => 0, 'IntervalMaxValue' => 1, 'ConstantActive' => true, 'ConstantValue' => 'Unbekannt', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'Power', 'ColorActive' => true, 'ColorValue' => -1, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ],
+            [ 'IntervalMinValue' => 1, 'IntervalMaxValue' => 2, 'ConstantActive' => true, 'ConstantValue' => 'Eingeschaltet', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'Power', 'ColorActive' => true, 'ColorValue' => 0x00CC00, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ],
+            [ 'IntervalMinValue' => 2, 'IntervalMaxValue' => 3, 'ConstantActive' => true, 'ConstantValue' => 'Ausgeschaltet', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'Power', 'ColorActive' => true, 'ColorValue' => 0xFF0000, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ]
+        ]);
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('PowerSupply'), [
+            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
+            'ICON' => 'Power',
+            'INTERVALS_ACTIVE' => true,
+            'INTERVALS' => $powerSupplyIntervals
+        ]);
+        IPS_SetVariableCustomProfile($this->GetIDForIdent('PowerSupply'), '');
+        IPS_SetVariableCustomProfile($this->GetIDForIdent('PowerOn'), '');
+        IPS_SetVariableCustomProfile($this->GetIDForIdent('Light'), '');
+        IPS_SetVariableCustomProfile($this->GetIDForIdent('AmbientLight'), '');
 
         $signalInfoOptions = json_encode([
             ['Value' => false, 'Caption' => 'Kein Hinweis', 'IconValue' => 'Information', 'IconActive' => true, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
@@ -149,17 +144,24 @@ class MieleHood extends IPSModuleStrict
             'OPTIONS' => $signalFailureOptions
         ]);
 
-        // CustomPresentation: Lüfterstufe Dropdown
+        IPS_SetVariableCustomProfile($this->GetIDForIdent('VentilationStep'), '');
         
-        if (!IPS_VariableProfileExists('Miele.VentilationStep')) {
-            IPS_CreateVariableProfile('Miele.VentilationStep', 1);
+        // Migration: Delete legacy profiles
+        if (IPS_VariableProfileExists('Miele.PowerSupply')) {
+            IPS_DeleteVariableProfile('Miele.PowerSupply');
         }
-        IPS_SetVariableCustomProfile($this->GetIDForIdent('VentilationStep'), 'Miele.VentilationStep');
-        IPS_SetVariableProfileAssociation('Miele.VentilationStep', 0, 'Aus', 'Ventilator', -1);
-        IPS_SetVariableProfileAssociation('Miele.VentilationStep', 1, 'Stufe 1', 'Ventilator', 0x00CC00);
-        IPS_SetVariableProfileAssociation('Miele.VentilationStep', 2, 'Stufe 2', 'Ventilator', 0xFFAA00);
-        IPS_SetVariableProfileAssociation('Miele.VentilationStep', 3, 'Stufe 3', 'Ventilator', 0xFF6600);
-        IPS_SetVariableProfileAssociation('Miele.VentilationStep', 4, 'Booster', 'Ventilator', 0xFF0000);
+        if (IPS_VariableProfileExists('Miele.PowerOn')) {
+            IPS_DeleteVariableProfile('Miele.PowerOn');
+        }
+        if (IPS_VariableProfileExists('Miele.Light')) {
+            IPS_DeleteVariableProfile('Miele.Light');
+        }
+        if (IPS_VariableProfileExists('Miele.AmbientLight')) {
+            IPS_DeleteVariableProfile('Miele.AmbientLight');
+        }
+        if (IPS_VariableProfileExists('Miele.VentilationStep')) {
+            IPS_DeleteVariableProfile('Miele.VentilationStep');
+        }
 
         // Aktionen nach CustomPresentation re-aktivieren
         $this->EnableAction('PowerOn');

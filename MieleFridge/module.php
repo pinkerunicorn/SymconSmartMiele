@@ -73,20 +73,18 @@ class MieleFridge extends IPSModuleStrict
             return;
         }
 
-        if (!IPS_VariableProfileExists('Miele.SuperCooling')) {
-            IPS_CreateVariableProfile('Miele.SuperCooling', 0);
-            IPS_SetVariableProfileAssociation('Miele.SuperCooling', false, 'Aus', 'Snowflake', -1);
-            IPS_SetVariableProfileAssociation('Miele.SuperCooling', true, 'Aktiv', 'Snowflake', 0x00BFFF);
-        }
-        IPS_SetVariableCustomProfile($this->GetIDForIdent('SuperCooling'), 'Miele.SuperCooling');
+        IPS_SetVariableCustomProfile($this->GetIDForIdent('SuperCooling'), '');
 
         if ($this->ReadPropertyBoolean('EnableSuperFreezing')) {
-            if (!IPS_VariableProfileExists('Miele.SuperFreezing')) {
-                IPS_CreateVariableProfile('Miele.SuperFreezing', 0);
-                IPS_SetVariableProfileAssociation('Miele.SuperFreezing', false, 'Aus', 'Snowflake', -1);
-                IPS_SetVariableProfileAssociation('Miele.SuperFreezing', true, 'Aktiv', 'Snowflake', 0x0066CC);
-            }
-            IPS_SetVariableCustomProfile($this->GetIDForIdent('SuperFreezing'), 'Miele.SuperFreezing');
+            IPS_SetVariableCustomProfile($this->GetIDForIdent('SuperFreezing'), '');
+        }
+        
+        // Migration: Delete legacy profiles
+        if (IPS_VariableProfileExists('Miele.SuperCooling')) {
+            IPS_DeleteVariableProfile('Miele.SuperCooling');
+        }
+        if (IPS_VariableProfileExists('Miele.SuperFreezing')) {
+            IPS_DeleteVariableProfile('Miele.SuperFreezing');
         }
 
         // CustomPresentation: Tür
