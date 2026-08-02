@@ -182,7 +182,7 @@ class MieleHood extends IPSModuleStrict
     protected function OnCentralStateChanged(string $stateName, mixed $newValue): void
     {
         if ($stateName === 'FireplaceActive' && $newValue) {
-            $this->Log('Kamin ist aktiv! Schalte Dunstabzugshaube zur Sicherheit aus.');
+            $this->SLogInfo('Kamin ist aktiv! Schalte Dunstabzugshaube zur Sicherheit aus.');
             if ($this->GetValue('PowerOn')) {
                 $this->RequestAction('PowerOn', false);
             }
@@ -287,7 +287,7 @@ class MieleHood extends IPSModuleStrict
     {
         $deviceId = $this->ReadPropertyString('DeviceID');
         if (empty($deviceId)) {
-            $this->Log('Device ID not configured.');
+            $this->SLogInfo('Device ID not configured.');
             return;
         }
 
@@ -298,7 +298,7 @@ class MieleHood extends IPSModuleStrict
             case 'PowerOn':
                 if ($Value && $this->GetCentralState('FireplaceActive')) {
                     echo "Fehler: Kamin ist aktiv! Dunstabzugshaube aus Sicherheitsgründen blockiert.\n";
-                    $this->Log('Blockiert: PowerOn wegen aktivem Kamin.');
+                    $this->SLogInfo('Blockiert: PowerOn wegen aktivem Kamin.');
                     return;
                 }
                 $this->HandlePowerAction((bool)$Value);
@@ -315,7 +315,7 @@ class MieleHood extends IPSModuleStrict
             case 'VentilationStep':
                 if ($Value > 0 && $this->GetCentralState('FireplaceActive')) {
                     echo "Fehler: Kamin ist aktiv! Lüftung aus Sicherheitsgründen blockiert.\n";
-                    $this->Log('Blockiert: VentilationStep wegen aktivem Kamin.');
+                    $this->SLogInfo('Blockiert: VentilationStep wegen aktivem Kamin.');
                     return;
                 }
                 $this->HandleVentilationAction((int)$Value);
@@ -333,10 +333,10 @@ class MieleHood extends IPSModuleStrict
     {
         if ($turnOn) {
             $actionData = ['powerOn' => true];
-            $this->Log('Schalte Haube ein');
+            $this->SLogInfo('Schalte Haube ein');
         } else {
             $actionData = ['powerOff' => true];
-            $this->Log('Schalte Haube aus');
+            $this->SLogInfo('Schalte Haube aus');
         }
 
         if ($this->SendAction($actionData)) {
@@ -349,7 +349,7 @@ class MieleHood extends IPSModuleStrict
      */
     private function HandleLightAction(bool $turnOn): void
     {
-        $this->Log('Schalte Licht: ' . ($turnOn ? 'An' : 'Aus'));
+        $this->SLogInfo('Schalte Licht: ' . ($turnOn ? 'An' : 'Aus'));
 
         // Check if light action is currently available
         $actions = $this->GetCachedActions();
@@ -357,9 +357,9 @@ class MieleHood extends IPSModuleStrict
 
         if (!$lightAvailable && $turnOn) {
             // Hood is probably off – power it on first
-            $this->Log('Licht nicht verfügbar – schalte Haube automatisch ein...');
+            $this->SLogInfo('Licht nicht verfügbar – schalte Haube automatisch ein...');
             if (!$this->SendAction(['powerOn' => true])) {
-                $this->Log('Fehler: Haube konnte nicht eingeschaltet werden');
+                $this->SLogInfo('Fehler: Haube konnte nicht eingeschaltet werden');
                 return;
             }
             $this->SetValue('PowerOn', true);
@@ -378,16 +378,16 @@ class MieleHood extends IPSModuleStrict
      */
     private function HandleAmbientLightAction(bool $turnOn): void
     {
-        $this->Log('Schalte Stimmungslicht: ' . ($turnOn ? 'An' : 'Aus'));
+        $this->SLogInfo('Schalte Stimmungslicht: ' . ($turnOn ? 'An' : 'Aus'));
 
         $actions = $this->GetCachedActions();
         $ambientAvailable = isset($actions['ambientLight']) && is_array($actions['ambientLight']) && !empty($actions['ambientLight']);
 
         if (!$ambientAvailable && $turnOn) {
             // Hood is probably off – power it on first
-            $this->Log('Stimmungslicht nicht verfügbar – schalte Haube automatisch ein...');
+            $this->SLogInfo('Stimmungslicht nicht verfügbar – schalte Haube automatisch ein...');
             if (!$this->SendAction(['powerOn' => true])) {
-                $this->Log('Fehler: Haube konnte nicht eingeschaltet werden');
+                $this->SLogInfo('Fehler: Haube konnte nicht eingeschaltet werden');
                 return;
             }
             $this->SetValue('PowerOn', true);
@@ -404,7 +404,7 @@ class MieleHood extends IPSModuleStrict
      */
     private function HandleVentilationAction(int $step): void
     {
-        $this->Log('Setze Lüfterstufe: ' . $step);
+        $this->SLogInfo('Setze Lüfterstufe: ' . $step);
 
         if ($this->SendAction(['ventilationStep' => $step])) {
             $this->SetValue('VentilationStep', $step);
@@ -432,7 +432,7 @@ class MieleHood extends IPSModuleStrict
         $success = json_decode($result, true);
 
         if (!$success) {
-            $this->Log('Fehler beim Ausführen der Aktion: ' . json_encode($actionData));
+            $this->SLogInfo('Fehler beim Ausführen der Aktion: ' . json_encode($actionData));
         }
 
         return (bool)$success;
@@ -501,17 +501,6 @@ class MieleHood extends IPSModuleStrict
         }
     }
 
-    protected function Log(string $text): void
-    {
-        $this->SLog('INFO', $text);
-    }
-
-    protected function LogMessage(string $Message, int $Type): bool
-    {
-        $this->SLog('INFO', $Message);
-        IPS_LogMessage('SmartVillaKunterbunt', 'MieleHood: ' . $Message);
-        return true;
-    }
 
     //==========================================================================
     // Configuration Form

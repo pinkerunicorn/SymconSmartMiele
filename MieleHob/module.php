@@ -221,12 +221,6 @@ class MieleHob extends IPSModuleStrict
         }
     }
 
-    protected function LogMessage(string $Message, int $Type): bool
-    {
-        $this->SLog('INFO', $Message);
-        IPS_LogMessage('SmartVillaKunterbunt', 'MieleHob: '. $Message);
-        return true;
-    }
 
     public function GetConfigurationForm(): string
     {

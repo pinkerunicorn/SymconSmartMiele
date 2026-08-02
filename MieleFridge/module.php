@@ -276,12 +276,6 @@ class MieleFridge extends IPSModuleStrict
         return (bool)json_decode($result, true);
     }
 
-    protected function LogMessage(string $Message, int $Type): bool
-    {
-        $this->SLog('INFO', $Message);
-        IPS_LogMessage('SmartVillaKunterbunt', 'MieleFridge: '. $Message);
-        return true;
-    }
 
     public function GetConfigurationForm(): string
     {

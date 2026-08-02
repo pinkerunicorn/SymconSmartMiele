@@ -476,12 +476,6 @@ class MieleSplitter extends IPSModuleStrict
     // Logging
     //==========================================================================
 
-    protected function LogMessage(string $Message, int $Type): bool
-    {
-        $this->SLog('INFO', $Message);
-        IPS_LogMessage('SmartVillaKunterbunt', 'MieleSplitter: ' . $Message);
-        return true;
-    }
 
     //==========================================================================
     // Configuration Form

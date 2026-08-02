@@ -262,7 +262,7 @@ class MieleDryer extends IPSModuleStrict
     {
         $deviceId = $this->ReadPropertyString('DeviceID');
         if (empty($deviceId)) {
-            $this->Log("Fehler: DeviceID ist leer.");
+            $this->SLogInfo("Fehler: DeviceID ist leer.");
             return;
         }
 
@@ -276,10 +276,6 @@ class MieleDryer extends IPSModuleStrict
         $this->SendDataToParent(json_encode($payload));
     }
 
-    protected function Log(string $text): void
-    {
-        $this->SLog('INFO', $text);
-    }
 
     private function ProcessDeviceData(array $deviceData): void
     {
@@ -289,7 +285,7 @@ class MieleDryer extends IPSModuleStrict
             if (isset($state['status']['value_localized'])) {
                 $newStatus = (string)$state['status']['value_localized'];
                 if (@$this->GetValue('StatusText') !== $newStatus) {
-                    $this->Log("Status geändert: ". $newStatus);
+                    $this->SLogInfo("Status geändert: ". $newStatus);
                 }
                 $this->SetValue('StatusText', $newStatus);
             }
@@ -452,12 +448,6 @@ class MieleDryer extends IPSModuleStrict
         }
     }
 
-    protected function LogMessage(string $Message, int $Type): bool
-    {
-        $this->SLog('INFO', $Message);
-        IPS_LogMessage('SmartVillaKunterbunt', 'MieleDryer: '. $Message);
-        return true;
-    }
 
     public function GetConfigurationForm(): string
     {

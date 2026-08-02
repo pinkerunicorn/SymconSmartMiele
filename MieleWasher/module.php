@@ -309,10 +309,6 @@ class MieleWasher extends IPSModuleStrict
         }
     }
 
-    protected function Log(string $text): void
-    {
-        $this->SLog('INFO', $text);
-    }
 
     private function ProcessDeviceData(array $deviceData): void
     {
@@ -322,7 +318,7 @@ class MieleWasher extends IPSModuleStrict
             if (isset($state['status']['value_localized'])) {
                 $newStatus = (string)$state['status']['value_localized'];
                 if (@$this->GetValue('StatusText') !== $newStatus) {
-                    $this->Log("Status geändert: ". $newStatus);
+                    $this->SLogInfo("Status geändert: ". $newStatus);
                 }
                 $this->SetValue('StatusText', $newStatus);
             }
@@ -510,12 +506,6 @@ class MieleWasher extends IPSModuleStrict
         }
     }
 
-    protected function LogMessage(string $Message, int $Type): bool
-    {
-        $this->SLog('INFO', $Message);
-        IPS_LogMessage('SmartVillaKunterbunt', 'MieleWasher: '. $Message);
-        return true;
-    }
 
     public function RequestAction(string $Ident, mixed $Value): void
     {
@@ -544,7 +534,7 @@ class MieleWasher extends IPSModuleStrict
     {
         $deviceId = $this->ReadPropertyString('DeviceID');
         if (empty($deviceId)) {
-            $this->Log("Fehler: Device ID fehlt.");
+            $this->SLogInfo("Fehler: Device ID fehlt.");
             return;
         }
 
