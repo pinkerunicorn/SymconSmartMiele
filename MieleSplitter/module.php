@@ -26,12 +26,6 @@ class MieleSplitter extends IPSModuleStrict
     {
         parent::Create();
 
-        // Self-healing for corrupted CustomPresentations
-        foreach (@IPS_GetChildrenIDs($this->InstanceID) as $childID) {
-            if (@IPS_VariableExists($childID)) {
-                @IPS_SetVariableCustomPresentation($childID, []);
-            }
-        }
 
         $this->DA_RegisterAvailability(900);
         $this->DA_RegisterWatchdog();
@@ -61,6 +55,7 @@ class MieleSplitter extends IPSModuleStrict
     public function ApplyChanges(): void
     {
         parent::ApplyChanges();
+        $this->DA_ApplyPresentation();
 
         if (empty($this->ReadPropertyString('ClientID')) || empty($this->ReadPropertyString('Username'))) {
             $this->SetStatus(104);

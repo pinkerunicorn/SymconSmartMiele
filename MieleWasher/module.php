@@ -19,6 +19,7 @@ class MieleWasher extends IPSModuleStrict
         $this->RegisterPropertyBoolean('EnableTwinDos', true);
 
         $this->DA_RegisterAvailability(900);
+        $this->DA_RegisterWatchdog();
 
         $this->RegisterAttributeInteger('LastTwinDos1', 0);
         $this->RegisterAttributeInteger('LastTwinDos2', 0);
@@ -31,7 +32,7 @@ class MieleWasher extends IPSModuleStrict
         
         // Variables
         $this->RegisterVariableInteger('PowerSupply', 'Spannungsversorgung', [
-            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => 'Power',
             'INTERVALS_ACTIVE' => true,
             'INTERVALS' => json_encode([
@@ -65,7 +66,7 @@ class MieleWasher extends IPSModuleStrict
             'ICON' => 'Information'
         ], 10);
         $this->RegisterVariableBoolean('SignalInfo', 'Hinweis vorhanden', [
-            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => 'Information',
             'COLOR' => -1,
             'CONTENT_COLOR' => -1,
@@ -78,7 +79,7 @@ class MieleWasher extends IPSModuleStrict
             ])
         ], 11);
         $this->RegisterVariableBoolean('SignalFailure', 'Fehler erkannt', [
-            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => 'Alert',
             'COLOR' => -1,
             'CONTENT_COLOR' => -1,
@@ -141,7 +142,7 @@ class MieleWasher extends IPSModuleStrict
             'ICON' => 'Motion'
         ], 32);
         $this->RegisterVariableBoolean('Door', 'Tür', [
-            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => 'door-closed',
             'COLOR' => -1,
             'CONTENT_COLOR' => -1,
@@ -190,6 +191,7 @@ class MieleWasher extends IPSModuleStrict
 
     public function ApplyChanges(): void{
         parent::ApplyChanges();
+        $this->DA_ApplyPresentation();
 
         if (empty($this->ReadPropertyString('DeviceID'))) {
             $this->SetStatus(104);
@@ -234,6 +236,7 @@ class MieleWasher extends IPSModuleStrict
             if (($type === 'DeviceUpdate' || !isset($data['Type'])) && isset($data['Devices'][$deviceId])) {
                 $this->ProcessDeviceData($data['Devices'][$deviceId]);
                 $this->DA_SetAvailable(true);
+                    $this->DA_ResetWatchdog(600);
                 
                 if ($this->ReadPropertyBoolean('EnableTwinDos')) {
                     $this->FetchFillingLevels($deviceId);
@@ -472,6 +475,7 @@ class MieleWasher extends IPSModuleStrict
         if ($state && is_array($state) && !isset($state['message'])) {
             $this->ProcessDeviceData(['state'=> $state]);
             $this->DA_SetAvailable(true);
+                    $this->DA_ResetWatchdog(600);
             
             if ($this->ReadPropertyBoolean('EnableTwinDos')) {
                 $this->FetchFillingLevels($deviceId);

@@ -18,10 +18,11 @@ class MieleHob extends IPSModuleStrict
         $this->RegisterPropertyInteger('PlateCount', 4);
 
         $this->DA_RegisterAvailability(900);
+        $this->DA_RegisterWatchdog();
 
         // Variables
         $this->RegisterVariableBoolean('IsActive', 'Kochfeld aktiv', [
-            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => 'Flame',
             'COLOR' => -1,
             'CONTENT_COLOR' => -1,
@@ -43,7 +44,7 @@ class MieleHob extends IPSModuleStrict
         ], 10);
         
         $this->RegisterVariableInteger('PowerSupply', 'Spannungsversorgung', [
-            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => 'Power',
             'INTERVALS_ACTIVE' => true,
             'INTERVALS' => json_encode([
@@ -72,6 +73,7 @@ class MieleHob extends IPSModuleStrict
 
     public function ApplyChanges(): void{
         parent::ApplyChanges();
+        $this->DA_ApplyPresentation();
 
         if (empty($this->ReadPropertyString('DeviceID'))) {
             $this->SetStatus(104);
@@ -124,6 +126,7 @@ class MieleHob extends IPSModuleStrict
                 if (isset($data['Devices'][$deviceId])) {
                     $this->ProcessDeviceData($data['Devices'][$deviceId]);
                     $this->DA_SetAvailable(true);
+                    $this->DA_ResetWatchdog(600);
                 }
             } elseif ($type === 'ActionsUpdate') {
                 // Das Kochfeld ist read-only, daher ignorieren wir ActionsUpdates
@@ -198,6 +201,7 @@ class MieleHob extends IPSModuleStrict
         if ($state && is_array($state) && !isset($state['message'])) {
             $this->ProcessDeviceData(['state'=> $state]);
             $this->DA_SetAvailable(true);
+                    $this->DA_ResetWatchdog(600);
             echo "Gerät erfolgreich aktualisiert!\n";
         } else {
             $this->DA_SetAvailable(false, 'API-Fehler beim manuellen Update');
