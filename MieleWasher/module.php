@@ -226,29 +226,6 @@ class MieleWasher extends IPSModuleStrict
             $this->FetchFillingLevels($deviceId);
         }
     }
-        if ($data['DataID'] == '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}') {
-            $deviceId = $this->ReadPropertyString('DeviceID');
-            if (empty($deviceId)) {
-                return "";
-            }
-
-            $type = $data['Type'] ?? '';
-            if (($type === 'DeviceUpdate' || !isset($data['Type'])) && isset($data['Devices'][$deviceId])) {
-                $this->ProcessDeviceData($data['Devices'][$deviceId]);
-                $this->DA_SetAvailable(true);
-                    $this->DA_ResetWatchdog(600);
-                
-                if ($this->ReadPropertyBoolean('EnableTwinDos')) {
-                    $this->FetchFillingLevels($deviceId);
-                }
-            }
-            if ($type === 'ActionsUpdate' && isset($data['Actions'][$deviceId])) {
-                $this->SetBuffer('DeviceActions', json_encode($data['Actions'][$deviceId]));
-            }
-        }
-    
-        return "";
-    }
 
     private function FetchFillingLevels(string $deviceId): void
     {
