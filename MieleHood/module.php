@@ -11,6 +11,7 @@ class MieleHood extends IPSModuleStrict
     use SmartLog_Trait;
     use CentralStateAware_Trait;
     use DeviceAvailability_Trait;
+    use MieleDevice_Trait;
 
     public function Create(): void
     {
@@ -169,92 +170,20 @@ class MieleHood extends IPSModuleStrict
         }
     }
 
-    public function ReceiveData(string $JSONString): string
+    protected function Miele_ProcessCustomDeviceData(array $state): void
     {
-        $data = json_decode($JSONString, true);
-        if (!is_array($data) || ($data['DataID'] ?? '') !== '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}') {
-            return '';
-        }
-
-        $deviceId = $this->ReadPropertyString('DeviceID');
-        if (empty($deviceId)) {
-            return '';
-        }
-
-        $type = $data['Type'] ?? '';
-
-        // Handle device state updates
-        if (($type === 'DeviceUpdate' || !isset($data['Type'])) && isset($data['Devices'][$deviceId])) {
-            $this->ProcessDeviceData($data['Devices'][$deviceId]);
-            $this->DA_SetAvailable(true);
-                    $this->DA_ResetWatchdog(600);
-        }
-
-        // Handle actions updates – cache locally
-        if ($type === 'ActionsUpdate' && isset($data['Actions'][$deviceId])) {
-            $this->SetBuffer('DeviceActions', json_encode($data['Actions'][$deviceId]));
-            $this->SendDebug('Actions', 'Cached actions: ' . json_encode($data['Actions'][$deviceId]), 0);
-        }
-
-        return '';
-    }
-
-    //==========================================================================
-    // Device Data Processing
-    //==========================================================================
-
-    private function ProcessDeviceData(array $deviceData): void
-    {
-        if (!isset($deviceData['state'])) {
-            return;
-        }
-
-        $state = $deviceData['state'];
-
-        if (isset($state['status']['value_localized'])) {
-            $this->SetValue('StatusText', (string)$state['status']['value_localized']);
-        }
-
-        // Power state: off (1) = false, on (2) = true, and others = true
-        if (isset($state['status']['value_raw'])) {
-            $statusRaw = (int)$state['status']['value_raw'];
-            $this->SetValue('PowerOn', $statusRaw !== 1);
-        }
-
-        // Signal-Flags (Hinweis = z.B. Fettfilter reinigen)
-        if (isset($state['signalInfo'])) {
-            $this->SetValue('SignalInfo', (bool)$state['signalInfo']);
-        }
-        if (isset($state['signalFailure'])) {
-            $this->SetValue('SignalFailure', (bool)$state['signalFailure']);
-        }
-
-        // Light (Miele API: 1=On, 2=Off)
         if (isset($state['light'])) {
             $this->SetValue('Light', (bool)($state['light'] == 1));
         }
-
-        // Ambient Light (Miele API: 1=On, 2=Off) – may not exist on all models
         if (isset($state['ambientLight'])) {
             $this->SetValue('AmbientLight', (bool)($state['ambientLight'] == 1));
         }
-
-        // VentilationStep
         if (isset($state['ventilationStep']['value_raw'])) {
             $this->SetValue('VentilationStep', (int)$state['ventilationStep']['value_raw']);
         }
-
-        // PowerSupply
-        if (isset($state['powerSupply']['value_raw'])) {
-            $this->SetValue('PowerSupply', (int)$state['powerSupply']['value_raw']);
-        }
-
-        // GreaseFilterSaturation
         if (isset($state['greaseFilterSaturation'])) {
             $this->SetValue('GreaseFilterSaturation', (int)$state['greaseFilterSaturation']);
         }
-
-        // CarbonFilterSaturation
         if (isset($state['carbonFilterSaturation'])) {
             $this->SetValue('CarbonFilterSaturation', (int)$state['carbonFilterSaturation']);
         }
@@ -320,7 +249,7 @@ class MieleHood extends IPSModuleStrict
             $this->SLogInfo('Schalte Haube aus');
         }
 
-        if ($this->SendAction($actionData)) {
+        if ($this->Miele_SendAction($actionData)) {
             $this->SetValue('PowerOn', $turnOn);
         }
     }
@@ -339,7 +268,7 @@ class MieleHood extends IPSModuleStrict
         if (!$lightAvailable && $turnOn) {
             // Hood is probably off – power it on first
             $this->SLogInfo('Licht nicht verfügbar – schalte Haube automatisch ein...');
-            if (!$this->SendAction(['powerOn' => true])) {
+            if (!$this->Miele_SendAction(['powerOn' => true])) {
                 $this->SLogInfo('Fehler: Haube konnte nicht eingeschaltet werden');
                 return;
             }
@@ -349,7 +278,7 @@ class MieleHood extends IPSModuleStrict
         }
 
         // Now send the light command (Miele API: 1=On, 2=Off)
-        if ($this->SendAction(['light' => $turnOn ? 1 : 2])) {
+        if ($this->Miele_SendAction(['light' => $turnOn ? 1 : 2])) {
             $this->SetValue('Light', $turnOn);
         }
     }
@@ -367,7 +296,7 @@ class MieleHood extends IPSModuleStrict
         if (!$ambientAvailable && $turnOn) {
             // Hood is probably off – power it on first
             $this->SLogInfo('Stimmungslicht nicht verfügbar – schalte Haube automatisch ein...');
-            if (!$this->SendAction(['powerOn' => true])) {
+            if (!$this->Miele_SendAction(['powerOn' => true])) {
                 $this->SLogInfo('Fehler: Haube konnte nicht eingeschaltet werden');
                 return;
             }
@@ -375,7 +304,7 @@ class MieleHood extends IPSModuleStrict
             IPS_Sleep(2000);
         }
 
-        if ($this->SendAction(['ambientLight' => $turnOn ? 1 : 2])) {
+        if ($this->Miele_SendAction(['ambientLight' => $turnOn ? 1 : 2])) {
             $this->SetValue('AmbientLight', $turnOn);
         }
     }
@@ -387,7 +316,7 @@ class MieleHood extends IPSModuleStrict
     {
         $this->SLogInfo('Setze Lüfterstufe: ' . $step);
 
-        if ($this->SendAction(['ventilationStep' => $step])) {
+        if ($this->Miele_SendAction(['ventilationStep' => $step])) {
             $this->SetValue('VentilationStep', $step);
         }
     }
@@ -395,29 +324,6 @@ class MieleHood extends IPSModuleStrict
     //==========================================================================
     // Helper Methods
     //==========================================================================
-
-    /**
-     * Sends an action to the Splitter for execution.
-     */
-    private function SendAction(array $actionData): bool
-    {
-        $deviceId = $this->ReadPropertyString('DeviceID');
-        $payload = [
-            'DataID'     => '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}',
-            'Command'    => 'ExecuteAction',
-            'DeviceID'   => $deviceId,
-            'ActionData' => $actionData
-        ];
-
-        $result = $this->SendDataToParent(json_encode($payload));
-        $success = json_decode($result, true);
-
-        if (!$success) {
-            $this->SLogInfo('Fehler beim Ausführen der Aktion: ' . json_encode($actionData));
-        }
-
-        return (bool)$success;
-    }
 
     /**
      * Gets cached available actions (from SSE actions event).
@@ -447,42 +353,6 @@ class MieleHood extends IPSModuleStrict
 
         return is_array($actions) ? $actions : [];
     }
-
-    /**
-     * Manual device update via REST API.
-     */
-    public function UpdateDevice(): void
-    {
-        $deviceId = $this->ReadPropertyString('DeviceID');
-        if (empty($deviceId)) {
-            echo "Fehler: Bitte zuerst eine Device ID eintragen.\n";
-            return;
-        }
-
-        $payload = [
-            'DataID'  => '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}',
-            'Command' => 'ApiGet',
-            'Endpoint' => '/v1/devices/' . urlencode($deviceId) . '/state'
-        ];
-
-        $result = $this->SendDataToParent(json_encode($payload));
-        $state = json_decode($result, true);
-
-        if ($state && is_array($state) && !isset($state['message'])) {
-            $this->ProcessDeviceData(['state' => $state]);
-            $this->DA_SetAvailable(true);
-                    $this->DA_ResetWatchdog(600);
-            echo "Gerät erfolgreich aktualisiert!\n";
-        } else {
-            $this->DA_SetAvailable(false, 'API-Fehler beim manuellen Update');
-            if (isset($state['message'])) {
-                $this->SLog('ERROR', 'Miele Update-Fehler', $state['message'] ?? 'Unbekannter Fehler');
-            } else {
-                echo "Fehler beim Update: Konnte keine Daten abrufen.\n";
-            }
-        }
-    }
-
 
     //==========================================================================
     // Configuration Form

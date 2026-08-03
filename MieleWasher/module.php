@@ -220,12 +220,12 @@ class MieleWasher extends IPSModuleStrict
 
     }
 
-    public function ReceiveData(string $JSONString): string
+    public function Miele_OnDeviceUpdate(string $deviceId): void
     {
-        $data = json_decode($JSONString, true);
-        if (!is_array($data)) {
-            return "";
+        if ($this->ReadPropertyBoolean('EnableTwinDos')) {
+            $this->FetchFillingLevels($deviceId);
         }
+    }
         if ($data['DataID'] == '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}') {
             $deviceId = $this->ReadPropertyString('DeviceID');
             if (empty($deviceId)) {
@@ -295,203 +295,7 @@ class MieleWasher extends IPSModuleStrict
     }
 
 
-    private function ProcessDeviceData(array $deviceData): void
-    {
-        if (isset($deviceData['state'])) {
-            $state = $deviceData['state'];
-
-            if (isset($state['status']['value_localized'])) {
-                $newStatus = (string)$state['status']['value_localized'];
-                if (@$this->GetValue('StatusText') !== $newStatus) {
-                    $this->SLogInfo("Status geändert: ". $newStatus);
-                }
-                $this->SetValue('StatusText', $newStatus);
-            }
-
-            // Power state: off (1) = false, anything else = true
-            if (isset($state['status']['value_raw'])) {
-                $this->SetValue('PowerOn', (int)$state['status']['value_raw'] !== 1);
-            }
-            if (isset($state['powerSupply']['value_raw'])) {
-                $this->SetValue('PowerSupply', (int)$state['powerSupply']['value_raw']);
-            }
-            if (isset($state['signalInfo'])) {
-                $this->SetValue('SignalInfo', (bool)$state['signalInfo']);
-            }
-            if (isset($state['signalFailure'])) {
-                $this->SetValue('SignalFailure', (bool)$state['signalFailure']);
-            }
-            
-            if (isset($state['ProgramID']['value_localized'])) {
-                $this->SetValue('ProgramName', (string)$state['ProgramID']['value_localized']);
-            }
-            if (isset($state['programPhase']['value_localized'])) {
-                $this->SetValue('ProgramPhaseText', (string)$state['programPhase']['value_localized']);
-            }
-
-            if (isset($state['targetTemperature'][0]['value_raw'])) {
-                $t = $state['targetTemperature'][0]['value_raw'];
-                if ($t > -100) {
-                    if ($t >= 1000) {
-                        $this->SetValue('Temperature', (int)($t / 100));
-                    } else {
-                        $this->SetValue('Temperature', (int)$t);
-                    }
-                }
-            }
-            if (isset($state['spinningSpeed']['value_raw'])) {
-                $s = $state['spinningSpeed']['value_raw'];
-                if ($s > -1) $this->SetValue('SpinSpeed', (int)$s);
-            }
-            if (isset($state['signalDoor'])) {
-                $this->SetValue('Door', (bool)$state['signalDoor']);
-            }
-            
-            if (isset($state['ecoFeedback']['currentWaterConsumption']['value'])) {
-                $water = (float)$state['ecoFeedback']['currentWaterConsumption']['value'];
-                $this->SetValue('CurrentWaterConsumption', $water);
-                if ($water > 0) {
-                    $this->WriteAttributeFloat('LastWater', $water);
-                    $this->SetValue('LastWaterConsumption', $water);
-                } else {
-                    $this->SetValue('LastWaterConsumption', $this->ReadAttributeFloat('LastWater'));
-                }
-            }
-            if (isset($state['ecoFeedback']['currentEnergyConsumption']['value'])) {
-                $energy = (float)$state['ecoFeedback']['currentEnergyConsumption']['value'];
-                $this->SetValue('CurrentEnergyConsumption', $energy);
-                if ($energy > 0) {
-                    $this->WriteAttributeFloat('LastEnergy', $energy);
-                    $this->SetValue('LastEnergyConsumption', $energy);
-                } else {
-                    $this->SetValue('LastEnergyConsumption', $this->ReadAttributeFloat('LastEnergy'));
-                }
-            }
-
-            $statusRaw = $state['status']['value_raw'] ?? 0;
-            
-            // --- Time & Progress Calculation ---
-            $remMinutes = @$this->GetValue('RemainingTime');
-            if (isset($state['remainingTime']) && is_array($state['remainingTime']) && count($state['remainingTime']) == 2) {
-                $remMinutes = ($state['remainingTime'][0] * 60) + $state['remainingTime'][1];
-            } else if (isset($state['remainingTime']) && is_array($state['remainingTime']) && count($state['remainingTime']) == 0) {
-                if ($statusRaw != 5 && $statusRaw != 7) $remMinutes = 0;
-            }
-
-            $elapsedMinutes = @$this->GetValue('ElapsedTime');
-            if (isset($state['elapsedTime']) && is_array($state['elapsedTime']) && count($state['elapsedTime']) == 2) {
-                $elapsedMinutes = ($state['elapsedTime'][0] * 60) + $state['elapsedTime'][1];
-            } else if (isset($state['elapsedTime']) && is_array($state['elapsedTime']) && count($state['elapsedTime']) == 0) {
-                if ($statusRaw != 5 && $statusRaw != 7) $elapsedMinutes = 0;
-            }
-
-            if ($statusRaw == 7) { // Finished
-                $remMinutes = 0;
-                $progress = 100;
-            } else if ($statusRaw == 5) { // In Use
-                $now = (int)(floor(time() / 60) * 60); // Strip seconds
-                $oldAnchor = $this->ReadAttributeInteger('AnchorStartTime');
-                
-                $machineElapsed = 0;
-                if (isset($state['elapsedTime']) && is_array($state['elapsedTime']) && count($state['elapsedTime']) == 2) {
-                    $machineElapsed = ($state['elapsedTime'][0] * 60) + $state['elapsedTime'][1];
-                }
-                
-                if ($machineElapsed > 0) {
-                    $elapsedMinutes = $machineElapsed;
-                    $expectedStart = $now - ($elapsedMinutes * 60);
-                    // Jitter protection: keep anchored StartTime if it's close
-                    if ($oldAnchor > 0 && abs($expectedStart - $oldAnchor) < 300) {
-                        $anchor = $oldAnchor;
-                    } else {
-                        $anchor = $expectedStart;
-                    }
-                } else {
-                    // Miele Waschmaschinen senden oft KEINE verstrichene Zeit.
-                    // Wir frieren die Startzeit ein und berechnen die verstrichene Zeit selbst!
-                    if ($oldAnchor > 0 && $oldAnchor <= time()) {
-                        $anchor = $oldAnchor;
-                    } else {
-                        $anchor = $now;
-                    }
-                    $elapsedMinutes = (int)round((time() - $anchor) / 60);
-                }
-                $this->WriteAttributeInteger('AnchorStartTime', $anchor);
-                
-                $total = $elapsedMinutes + $remMinutes;
-                $progress = ($total > 0) ? (int)round(($elapsedMinutes / $total) * 100) : 0;
-            } else if ($statusRaw == 4) { // Waiting to start
-                $progress = 0;
-                $elapsedMinutes = 0;
-            } else { // Off, Idle
-                $progress = 0;
-                $elapsedMinutes = 0;
-                $remMinutes = 0;
-                $this->WriteAttributeInteger('AnchorStartTime', 0);
-            }
-
-            $this->SetValue('ElapsedTime', (int)$elapsedMinutes);
-            $this->SetValue('RemainingTime', (int)$remMinutes);
-            $this->SetValue('RemainingTimeSeconds', (int)($remMinutes * 60));
-            $this->SetValue('ProgressPct', (int)$progress);
-            
-            // StartTime String
-            $startTimeStr = '-';
-            if (isset($state['startTime']) && is_array($state['startTime']) && count($state['startTime']) == 2) {
-                $startTimeStr = sprintf('%02d:%02d', $state['startTime'][0], $state['startTime'][1]);
-            }
-            $this->SetValue('StartTime', $startTimeStr);
-            
-            // FinishTime String
-            $finishTimeStr = '-';
-            if ($statusRaw == 5 || $statusRaw == 7) {
-                if ($remMinutes > 0) {
-                    $finishTimeStr = date('H:i', time() + ($remMinutes * 60));
-                } else {
-                    $finishTimeStr = date('H:i');
-                }
-            }
-            $this->SetValue('FinishTime', $finishTimeStr);
-        }
-    }
-
-    public function UpdateDevice(): void
-    {
-        $deviceId = $this->ReadPropertyString('DeviceID');
-        if (empty($deviceId)) {
-            echo "Fehler: Bitte zuerst eine Device ID eintragen.\n";
-            return;
-        }
-
-        $payload = [
-            'DataID'=> '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}',
-            'Command'=> 'ApiGet',
-            'Endpoint'=> '/v1/devices/'. urlencode($deviceId) . '/state'
-        ];
-        
-        $result = $this->SendDataToParent(json_encode($payload));
-        $state = json_decode($result, true);
-
-        if ($state && is_array($state) && !isset($state['message'])) {
-            $this->ProcessDeviceData(['state'=> $state]);
-            $this->DA_SetAvailable(true);
-                    $this->DA_ResetWatchdog(600);
-            
-            if ($this->ReadPropertyBoolean('EnableTwinDos')) {
-                $this->FetchFillingLevels($deviceId);
-            }
-            
-            echo "Gerät erfolgreich aktualisiert!\n";
-        } else {
-            $this->DA_SetAvailable(false, 'API-Fehler beim manuellen Update');
-            if (isset($state['message'])) {
-                $this->SLog('ERROR', 'Miele Update-Fehler', $state['message'] ?? 'Unbekannter Fehler');
-            } else {
-                echo "Fehler beim Update: Konnte keine Daten abrufen. Bitte API-Verbindung und Device ID prüfen.\n";
-            }
-        }
-    }
-
+    
 
     public function RequestAction(string $Ident, mixed $Value): void
     {
@@ -501,37 +305,22 @@ class MieleWasher extends IPSModuleStrict
                 break;
             case 'PowerOn':
                 if ($Value) {
-                    $this->SendAction(['powerOn' => true]);
+                    $this->Miele_SendAction(['powerOn' => true]);
                 } else {
-                    $this->SendAction(['powerOff' => true]);
+                    $this->Miele_SendAction(['powerOff' => true]);
                 }
                 $this->SetValue('PowerOn', (bool)$Value);
                 break;
             case 'ProcessAction':
                 if ($Value > 0) {
-                    $this->SendAction(['processAction' => (int)$Value]);
+                    $this->Miele_SendAction(['processAction' => (int)$Value]);
                 }
                 $this->SetValue('ProcessAction', (int)$Value);
                 break;
         }
     }
 
-    private function SendAction(array $actionData): void
-    {
-        $deviceId = $this->ReadPropertyString('DeviceID');
-        if (empty($deviceId)) {
-            $this->SLogInfo("Fehler: Device ID fehlt.");
-            return;
-        }
-
-        $payload = [
-            'DataID' => '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}',
-            'Command' => 'ExecuteAction',
-            'DeviceID' => $deviceId,
-            'ActionData' => $actionData
-        ];
-        $this->SendDataToParent(json_encode($payload));
-    }
+    
 
     public function GetConfigurationForm(): string
     {

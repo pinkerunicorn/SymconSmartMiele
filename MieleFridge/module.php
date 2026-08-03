@@ -109,112 +109,29 @@ class MieleFridge extends IPSModuleStrict
 
     }
 
-    public function ReceiveData(string $JSONString): string
+    protected function Miele_ProcessCustomDeviceData(array $state): void
     {
-        $data = json_decode($JSONString, true);
-        if (!is_array($data)) {
-            return "";
-        }
-        if ($data['DataID'] == '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}') {
-            $deviceId = $this->ReadPropertyString('DeviceID');
-            if (empty($deviceId)) {
-                return "";
-            }
+        if (isset($state['status']['value_raw'])) {
+            $statusRaw = $state['status']['value_raw'];
+            $isSuperCooling = ($statusRaw == 14 || $statusRaw == 146);
+            $isSuperFreezing = ($statusRaw == 15 || $statusRaw == 147);
 
-            $type = $data['Type'] ?? 'DeviceUpdate';
-
-            if ($type === 'DeviceUpdate') {
-                if (isset($data['Devices'][$deviceId])) {
-                    $this->ProcessDeviceData($data['Devices'][$deviceId]);
-                    $this->DA_SetAvailable(true);
-                    $this->DA_ResetWatchdog(600);
-                }
-            } elseif ($type === 'ActionsUpdate') {
-                if (isset($data['Actions'][$deviceId])) {
-                    $this->SetBuffer('ActionsData', json_encode($data['Actions'][$deviceId]));
-                }
-            }
-        }
-    
-        return "";
-    }
-
-    private function ProcessDeviceData(array $deviceData): void
-    {
-        if (isset($deviceData['state'])) {
-            $state = $deviceData['state'];
-
-            if (isset($state['status']['value_localized'])) {
-                $this->SetValue('StatusText', (string)$state['status']['value_localized']);
-            }
-            if (isset($state['status']['value_raw'])) {
-                $statusRaw = $state['status']['value_raw'];
-                $isSuperCooling = ($statusRaw == 14 || $statusRaw == 146);
-                $isSuperFreezing = ($statusRaw == 15 || $statusRaw == 147);
-
-                $actionsData = $this->GetBuffer('ActionsData');
-                if ($actionsData) {
-                    $actions = json_decode($actionsData, true);
-                    if (isset($actions['processAction']) && is_array($actions['processAction'])) {
-                        if (in_array(7, $actions['processAction'])) {
-                            $isSuperCooling = true;
-                        }
-                        if (in_array(5, $actions['processAction'])) {
-                            $isSuperFreezing = true;
-                        }
+            $actionsData = $this->GetBuffer('ActionsData');
+            if ($actionsData) {
+                $actions = json_decode($actionsData, true);
+                if (isset($actions['processAction']) && is_array($actions['processAction'])) {
+                    if (in_array(7, $actions['processAction'])) {
+                        $isSuperCooling = true;
+                    }
+                    if (in_array(5, $actions['processAction'])) {
+                        $isSuperFreezing = true;
                     }
                 }
-
-                $this->SetValue('SuperCooling', $isSuperCooling);
-                if ($this->ReadPropertyBoolean('EnableSuperFreezing')) {
-                    $this->SetValue('SuperFreezing', $isSuperFreezing);
-                }
             }
 
-            if (isset($state['temperature'][0]['value_raw'])) {
-                $valTemp = (int)round($state['temperature'][0]['value_raw'] / 100.0);
-                $this->SendDebug('Temp Update', 'Raw: '. $valTemp . 'Type: '. gettype($valTemp), 0);
-                $this->SetValue('Temp1', $valTemp);
-            }
-            if (isset($state['targetTemperature'][0]['value_raw'])) {
-                $valTarget = (int)round($state['targetTemperature'][0]['value_raw'] / 100.0);
-                $this->SetValue('TargetTemp1', $valTarget);
-            }
-            
-            if (isset($state['signalDoor'])) {
-                $this->SetValue('DoorOpen', (bool)$state['signalDoor']);
-            }
-        }
-    }
-
-    public function UpdateDevice(): void
-    {
-        $deviceId = $this->ReadPropertyString('DeviceID');
-        if (empty($deviceId)) {
-            echo "Fehler: Bitte zuerst eine Device ID eintragen.\n";
-            return;
-        }
-
-        $payload = [
-            'DataID'=> '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}',
-            'Command'=> 'ApiGet',
-            'Endpoint'=> '/v1/devices/'. urlencode($deviceId) . '/state'
-        ];
-        
-        $result = $this->SendDataToParent(json_encode($payload));
-        $state = json_decode($result, true);
-
-        if ($state && is_array($state) && !isset($state['message'])) {
-            $this->ProcessDeviceData(['state'=> $state]);
-            $this->DA_SetAvailable(true);
-                    $this->DA_ResetWatchdog(600);
-            echo "Gerät erfolgreich aktualisiert!\n";
-        } else {
-            $this->DA_SetAvailable(false, 'API-Fehler beim manuellen Update');
-            if (isset($state['message'])) {
-                $this->SLog('ERROR', 'Miele Update-Fehler', $state['message'] ?? 'Unbekannter Fehler');
-            } else {
-                echo "Fehler beim Update: Konnte keine Daten abrufen. Bitte API-Verbindung und Device ID prüfen.\n";
+            $this->SetValue('SuperCooling', $isSuperCooling);
+            if ($this->ReadPropertyBoolean('EnableSuperFreezing')) {
+                $this->SetValue('SuperFreezing', $isSuperFreezing);
             }
         }
     }
@@ -251,27 +168,13 @@ class MieleFridge extends IPSModuleStrict
         }
 
         if (!empty($actionData)) {
-            $success = $this->SendAction($deviceId, $actionData);
+            $success = $this->Miele_SendAction($deviceId, $actionData);
 
             if ($success) {
                 $this->SetValue($Ident, $Value);
             }
         }
     }
-
-    private function SendAction(string $deviceId, array $actionData): bool
-    {
-        $payload = [
-            'DataID'=> '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}',
-            'Command'=> 'ExecuteAction',
-            'DeviceID'=> $deviceId,
-            'ActionData'=> $actionData
-        ];
-        
-        $result = $this->SendDataToParent(json_encode($payload));
-        return (bool)json_decode($result, true);
-    }
-
 
     public function GetConfigurationForm(): string
     {

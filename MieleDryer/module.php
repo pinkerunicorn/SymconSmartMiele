@@ -188,37 +188,6 @@ class MieleDryer extends IPSModuleStrict
 
     }
 
-    public function ReceiveData(string $JSONString): string
-    {
-        $data = json_decode($JSONString, true);
-        if (!is_array($data)) {
-            return "";
-        }
-        if ($data['DataID'] == '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}') {
-            $deviceId = $this->ReadPropertyString('DeviceID');
-            if (empty($deviceId)) {
-                return "";
-            }
-
-            $type = $data['Type'] ?? '';
-
-            if ($type === 'DeviceUpdate' || $type === '') {
-                if (isset($data['Devices'][$deviceId])) {
-                    $this->ProcessDeviceData($data['Devices'][$deviceId]);
-                    $this->DA_SetAvailable(true);
-                    $this->DA_ResetWatchdog(600);
-                }
-            }
-            if ($type === 'ActionsUpdate' || $type === '') {
-                if (isset($data['Actions'][$deviceId])) {
-                    $this->SetBuffer('ActionsUpdate', json_encode($data['Actions'][$deviceId]));
-                }
-            }
-        }
-    
-        return "";
-    }
-
     public function RequestAction(string $Ident, mixed $Value): void
     {
         switch ($Ident) {
@@ -227,213 +196,21 @@ class MieleDryer extends IPSModuleStrict
                 break;
             case 'PowerOn':
                 $action = $Value ? 'powerOn' : 'powerOff';
-                $this->SendAction([$action => true]);
+                $this->Miele_SendAction([$action => true]);
                 $this->SetValue($Ident, $Value);
                 break;
             case 'ProcessAction':
                 if ($Value == 1) {
-                    $this->SendAction(['processAction' => 1]);
+                    $this->Miele_SendAction(['processAction' => 1]);
                 } elseif ($Value == 2) {
-                    $this->SendAction(['processAction' => 2]);
+                    $this->Miele_SendAction(['processAction' => 2]);
                 } elseif ($Value == 3) {
-                    $this->SendAction(['processAction' => 3]);
+                    $this->Miele_SendAction(['processAction' => 3]);
                 }
                 $this->SetValue($Ident, 0);
                 break;
         }
     }
-
-    private function SendAction(array $actionData): void
-    {
-        $deviceId = $this->ReadPropertyString('DeviceID');
-        if (empty($deviceId)) {
-            $this->SLogInfo("Fehler: DeviceID ist leer.");
-            return;
-        }
-
-        $payload = [
-            'DataID' => '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}',
-            'Command' => 'ExecuteAction',
-            'DeviceID' => $deviceId,
-            'ActionData' => $actionData
-        ];
-        
-        $this->SendDataToParent(json_encode($payload));
-    }
-
-
-    private function ProcessDeviceData(array $deviceData): void
-    {
-        if (isset($deviceData['state'])) {
-            $state = $deviceData['state'];
-
-            if (isset($state['status']['value_localized'])) {
-                $newStatus = (string)$state['status']['value_localized'];
-                if (@$this->GetValue('StatusText') !== $newStatus) {
-                    $this->SLogInfo("Status geändert: ". $newStatus);
-                }
-                $this->SetValue('StatusText', $newStatus);
-            }
-            
-            $statusRaw = $state['status']['value_raw'] ?? 0;
-            if ($statusRaw > 0) {
-                $this->SetValue('PowerOn', $statusRaw != 1);
-            }
-            if (isset($state['powerSupply']['value_raw'])) {
-                $this->SetValue('PowerSupply', (int)$state['powerSupply']['value_raw']);
-            }
-
-            if (isset($state['signalInfo'])) {
-                $this->SetValue('SignalInfo', (bool)$state['signalInfo']);
-            }
-            if (isset($state['signalFailure'])) {
-                $this->SetValue('SignalFailure', (bool)$state['signalFailure']);
-            }
-            
-            if (isset($state['ProgramID']['value_localized'])) {
-                $this->SetValue('ProgramName', (string)$state['ProgramID']['value_localized']);
-            }
-            if (isset($state['programPhase']['value_localized'])) {
-                $this->SetValue('ProgramPhaseText', (string)$state['programPhase']['value_localized']);
-            }
-
-            if (isset($state['signalDoor'])) {
-                $this->SetValue('Door', (bool)$state['signalDoor']);
-            }
-
-            if (isset($state['dryingStep']['value_localized'])) {
-                $this->SetValue('DrynessLevel', (string)$state['dryingStep']['value_localized']);
-            } elseif (isset($state['drynessLevel']['value_localized'])) {
-                $this->SetValue('DrynessLevel', (string)$state['drynessLevel']['value_localized']);
-            }
-            
-            if (isset($state['ecoFeedback']['currentEnergyConsumption']['value'])) {
-                $energy = (float)$state['ecoFeedback']['currentEnergyConsumption']['value'];
-                $this->SetValue('CurrentEnergyConsumption', $energy);
-                if ($energy > 0) {
-                    $this->WriteAttributeFloat('LastEnergy', $energy);
-                    $this->SetValue('LastEnergyConsumption', $energy);
-                } else {
-                    $this->SetValue('LastEnergyConsumption', $this->ReadAttributeFloat('LastEnergy'));
-                }
-            }
-
-            // --- Time & Progress Calculation ---
-            $remMinutes = @$this->GetValue('RemainingTime');
-            if (isset($state['remainingTime']) && is_array($state['remainingTime']) && count($state['remainingTime']) == 2) {
-                $remMinutes = ($state['remainingTime'][0] * 60) + $state['remainingTime'][1];
-            } else if (isset($state['remainingTime']) && is_array($state['remainingTime']) && count($state['remainingTime']) == 0) {
-                if ($statusRaw != 5 && $statusRaw != 7) $remMinutes = 0;
-            }
-
-            $elapsedMinutes = @$this->GetValue('ElapsedTime');
-            if (isset($state['elapsedTime']) && is_array($state['elapsedTime']) && count($state['elapsedTime']) == 2) {
-                $elapsedMinutes = ($state['elapsedTime'][0] * 60) + $state['elapsedTime'][1];
-            } else if (isset($state['elapsedTime']) && is_array($state['elapsedTime']) && count($state['elapsedTime']) == 0) {
-                if ($statusRaw != 5 && $statusRaw != 7) $elapsedMinutes = 0;
-            }
-
-            if ($statusRaw == 7) { // Finished
-                $remMinutes = 0;
-                $progress = 100;
-            } else if ($statusRaw == 5) { // In Use
-                $now = (int)(floor(time() / 60) * 60); // Strip seconds
-                $oldAnchor = $this->ReadAttributeInteger('AnchorStartTime');
-                
-                $machineElapsed = 0;
-                if (isset($state['elapsedTime']) && is_array($state['elapsedTime']) && count($state['elapsedTime']) == 2) {
-                    $machineElapsed = ($state['elapsedTime'][0] * 60) + $state['elapsedTime'][1];
-                }
-                
-                if ($machineElapsed > 0) {
-                    $elapsedMinutes = $machineElapsed;
-                    $expectedStart = $now - ($elapsedMinutes * 60);
-                    // Jitter protection: keep anchored StartTime if it's close
-                    if ($oldAnchor > 0 && abs($expectedStart - $oldAnchor) < 300) {
-                        $anchor = $oldAnchor;
-                    } else {
-                        $anchor = $expectedStart;
-                    }
-                } else {
-                    // Falls der Trockner keine ElapsedTime schickt, berechnen wir sie selbst
-                    if ($oldAnchor > 0 && $oldAnchor <= time()) {
-                        $anchor = $oldAnchor;
-                    } else {
-                        $anchor = $now;
-                    }
-                    $elapsedMinutes = (int)round((time() - $anchor) / 60);
-                }
-                $this->WriteAttributeInteger('AnchorStartTime', $anchor);
-                
-                $total = $elapsedMinutes + $remMinutes;
-                $progress = ($total > 0) ? (int)round(($elapsedMinutes / $total) * 100) : 0;
-            } else if ($statusRaw == 4) { // Waiting to start
-                $progress = 0;
-                $elapsedMinutes = 0;
-            } else { // Off, Idle
-                $progress = 0;
-                $elapsedMinutes = 0;
-                $remMinutes = 0;
-                $this->WriteAttributeInteger('AnchorStartTime', 0);
-            }
-
-            $this->SetValue('ElapsedTime', (int)$elapsedMinutes);
-            $this->SetValue('RemainingTime', (int)$remMinutes);
-            $this->SetValue('RemainingTimeSeconds', (int)($remMinutes * 60));
-            $this->SetValue('ProgressPct', (int)$progress);
-            
-            // StartTime String
-            $startTimeStr = '-';
-            if (isset($state['startTime']) && is_array($state['startTime']) && count($state['startTime']) == 2) {
-                $startTimeStr = sprintf('%02d:%02d', $state['startTime'][0], $state['startTime'][1]);
-            }
-            $this->SetValue('StartTime', $startTimeStr);
-            
-            // FinishTime String
-            $finishTimeStr = '-';
-            if ($statusRaw == 5 || $statusRaw == 7) {
-                if ($remMinutes > 0) {
-                    $finishTimeStr = date('H:i', time() + ($remMinutes * 60));
-                } else {
-                    $finishTimeStr = date('H:i');
-                }
-            }
-            $this->SetValue('FinishTime', $finishTimeStr);
-        }
-    }
-
-    public function UpdateDevice(): void
-    {
-        $deviceId = $this->ReadPropertyString('DeviceID');
-        if (empty($deviceId)) {
-            echo "Fehler: Bitte zuerst eine Device ID eintragen.\n";
-            return;
-        }
-
-        $payload = [
-            'DataID'=> '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}',
-            'Command'=> 'ApiGet',
-            'Endpoint'=> '/v1/devices/'. urlencode($deviceId) . '/state'
-        ];
-        
-        $result = $this->SendDataToParent(json_encode($payload));
-        $state = json_decode($result, true);
-
-        if ($state && is_array($state) && !isset($state['message'])) {
-            $this->ProcessDeviceData(['state'=> $state]);
-            $this->DA_SetAvailable(true);
-                    $this->DA_ResetWatchdog(600);
-            echo "Gerät erfolgreich aktualisiert!\n";
-        } else {
-            $this->DA_SetAvailable(false, 'API-Fehler beim manuellen Update');
-            if (isset($state['message'])) {
-                $this->SLog('ERROR', 'Miele Update-Fehler', $state['message'] ?? 'Unbekannter Fehler');
-            } else {
-                echo "Fehler beim Update: Konnte keine Daten abrufen. Bitte API-Verbindung und Device ID prüfen.\n";
-            }
-        }
-    }
-
 
     public function GetConfigurationForm(): string
     {
