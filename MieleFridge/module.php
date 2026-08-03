@@ -42,8 +42,17 @@ class MieleFridge extends IPSModuleStrict
         $this->EnableAction('TargetTemp1');
         
         $this->RegisterVariableBoolean('DoorOpen', 'Tür', [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'door-closed'
+            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
+            'ICON' => 'door-closed',
+            'COLOR' => -1,
+            'CONTENT_COLOR' => -1,
+            'DISPLAY_TYPE' => 0,
+            'PREVIEW_STYLE' => 1,
+            'SHOW_PREVIEW' => true,
+            'OPTIONS' => json_encode([
+                ['Value' => false, 'Caption' => 'Offen', 'IconValue' => 'door-open', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFF0000, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFF0000],
+                ['Value' => true, 'Caption' => 'Geschlossen', 'IconValue' => 'door-closed', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00FF00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00FF00]
+            ])
         ], 30);
 
         $this->RegisterVariableBoolean('SuperCooling', 'Schnellkühlen', [
@@ -87,21 +96,7 @@ class MieleFridge extends IPSModuleStrict
             IPS_DeleteVariableProfile('Miele.SuperFreezing');
         }
 
-        // CustomPresentation: Tür
-        $doorOptions = json_encode([
-            ['Value' => false, 'Caption' => 'Offen', 'IconValue' => 'door-open', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFF0000, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFF0000],
-            ['Value' => true, 'Caption' => 'Geschlossen', 'IconValue' => 'door-closed', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00FF00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00FF00]
-        ]);
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('DoorOpen'), [
-            'PRESENTATION' => '{3319437D-7CDE-699D-750A-3C6A3841FA75}',
-            'ICON' => 'door-closed',
-            'COLOR' => -1,
-            'CONTENT_COLOR' => -1,
-            'DISPLAY_TYPE' => 0,
-            'PREVIEW_STYLE' => 1,
-            'SHOW_PREVIEW' => true,
-            'OPTIONS' => $doorOptions
-        ]);
+
 
         // Aktionen nach CustomPresentation re-aktivieren
         $this->EnableAction('TargetTemp1');
@@ -110,7 +105,6 @@ class MieleFridge extends IPSModuleStrict
             $this->EnableAction('SuperFreezing');
         }
 
-        $this->DA_ApplyPresentation();
     }
 
     public function ReceiveData(string $JSONString): string

@@ -65,7 +65,7 @@ class MieleSplitter extends IPSModuleStrict
         if (empty($this->ReadPropertyString('ClientID')) || empty($this->ReadPropertyString('Username'))) {
             $this->SetStatus(104);
             $this->SetValue('SSEStatus', 'Nicht konfiguriert');
-            $this->DA_ApplyPresentation();
+
             $this->SetTimerInterval('SM_TokenRefresh', 0);
             $this->DA_StopWatchdog();
             return;
@@ -85,8 +85,7 @@ class MieleSplitter extends IPSModuleStrict
             $this->SetValue('SSEStatus', 'Authentifizierung fehlgeschlagen');
             $this->DA_SetAvailable(false, 'Authentifizierung fehlgeschlagen');
         }
-        
-        $this->DA_ApplyPresentation();
+
     }
 
     //==========================================================================
