@@ -274,8 +274,6 @@ class MieleHood extends IPSModuleStrict
                 return;
             }
             $this->SetValue('PowerOn', true);
-            // Wait for the hood to become ready
-            IPS_Sleep(2000);
         }
 
         // Now send the light command (Miele API: 1=On, 2=Off)
@@ -302,7 +300,6 @@ class MieleHood extends IPSModuleStrict
                 return;
             }
             $this->SetValue('PowerOn', true);
-            IPS_Sleep(2000);
         }
 
         if ($this->Miele_SendAction(['ambientLight' => $turnOn ? 1 : 2])) {
