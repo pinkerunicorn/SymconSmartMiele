@@ -439,7 +439,7 @@ class MieleSplitter extends IPSModuleStrict
             $this->UpdateSSEClientConfig($token);
             echo "Authentifizierung erfolgreich! SSE-Verbindung wird aufgebaut.\n";
         } else {
-            echo "Authentifizierung fehlgeschlagen. Bitte Zugangsdaten prÃ¼fen.\n";
+            echo "Authentifizierung fehlgeschlagen. Bitte Zugangsdaten prüfen.\n";
         }
     }
 
@@ -454,7 +454,7 @@ class MieleSplitter extends IPSModuleStrict
             $this->SetValue('SSEStatus', 'Reconnect...');
             echo "SSE-Verbindung wird neu aufgebaut.\n";
         } else {
-            echo "Kein gÃ¼ltiger Token verfÃ¼gbar.\n";
+            echo "Kein gültiger Token verfügbar.\n";
         }
     }
 
@@ -482,7 +482,7 @@ class MieleSplitter extends IPSModuleStrict
     "elements": [
         {
             "type": "Label",
-            "caption": "Hey! Hier verbinden wir uns mit der Miele Cloud via Echtzeit-SSE-Stream. Trag einfach deine Zugangsdaten und die API-SchlÃ¼ssel ein."
+            "caption": "Hey! Hier verbinden wir uns mit der Miele Cloud via Echtzeit-SSE-Stream. Trag einfach deine Zugangsdaten und die API-Schlüssel ein."
         },
         {
             "type": "RowLayout",
@@ -524,7 +524,7 @@ class MieleSplitter extends IPSModuleStrict
                     "value": "de-DE"
                 },
                 {
-                    "caption": "Ã–sterreich",
+                    "caption": "Österreich",
                     "value": "de-AT"
                 },
                 {
@@ -535,7 +535,7 @@ class MieleSplitter extends IPSModuleStrict
         },
         {
             "type": "Label",
-            "caption": "â„¹ï¸ Die Verbindung lÃ¤uft Ã¼ber Server-Sent Events (SSE) â€“ StatusÃ¤nderungen kommen in Echtzeit, ohne Polling."
+            "caption": "â„¹ï¸ Die Verbindung läuft über Server-Sent Events (SSE) â€“ Statusänderungen kommen in Echtzeit, ohne Polling."
         }
     ],
     "actions": [
