@@ -19,8 +19,8 @@ class MieleSplitter extends IPSModuleStrict
 
     // Token refresh 5 minutes before expiry
     private const TOKEN_REFRESH_MARGIN = 300;
-    // Token check interval (every 60 seconds)
-    private const TOKEN_CHECK_INTERVAL = 60000;
+    // Token check interval (every 30 seconds for faster watchdog)
+    private const TOKEN_CHECK_INTERVAL = 30000;
 
     public function Create(): void
     {
@@ -334,9 +334,9 @@ class MieleSplitter extends IPSModuleStrict
         // 1. Watchdog: Check if SSE connection is dead
         $lastReceive = (int)$this->GetBuffer('LastSSEReceive');
         // Treat 0 as dead if we haven't received anything (though UpdateSSEClientConfig sets it now)
-        if ($lastReceive == 0 || (time() - $lastReceive > 120)) {
-            $this->SendDebug('Watchdog', 'Kein SSE Event seit 120s! Erzwinge Reconnect...', 0);
-            $this->SLog('WARNING', 'SSE Watchdog', 'Keine Daten seit >120s erhalten, Reconnect & Fallback-Polling...');
+        if ($lastReceive == 0 || (time() - $lastReceive > 60)) {
+            $this->SendDebug('Watchdog', 'Kein SSE Event seit 60s! Erzwinge Reconnect...', 0);
+            $this->SLog('WARNING', 'SSE Watchdog', 'Keine Daten seit >60s erhalten, Reconnect & Fallback-Polling...');
             
             if ($token) {
                 // Fallback Polling: fetch current state so devices don't get out of sync
