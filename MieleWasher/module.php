@@ -103,7 +103,7 @@ class MieleWasher extends IPSModuleStrict
             'ICON' => 'Script'
         ], 22);
         
-        $this->RegisterVariableInteger('ElapsedTime', 'verstrichene Zeit', [
+        $this->RegisterVariableInteger('ElapsedTime', 'Verstrichene Zeit', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => 'min',
             'ICON' => 'Clock'
@@ -117,12 +117,12 @@ class MieleWasher extends IPSModuleStrict
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => 'Clock'
         ], 24);
-        $this->RegisterVariableInteger('RemainingTime', 'verbleibende Zeit', [
+        $this->RegisterVariableInteger('RemainingTime', 'Verbleibende Zeit', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => 'min',
             'ICON' => 'Clock'
         ], 28);
-        $this->RegisterVariableInteger('RemainingTimeSeconds', 'verbleibende Zeit (Sekunden)', [
+        $this->RegisterVariableInteger('RemainingTimeSeconds', 'Verbleibende Zeit (Sekunden)', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => 's',
             'ICON' => 'Clock'
