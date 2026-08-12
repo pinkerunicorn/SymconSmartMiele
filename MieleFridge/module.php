@@ -44,19 +44,7 @@ class MieleFridge extends IPSModuleStrict
         ], 25);
         $this->EnableAction('TargetTemp1');
         
-        $this->RegisterVariableBoolean('DoorOpen', 'Tür', [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'door-closed',
-            'COLOR' => -1,
-            'CONTENT_COLOR' => -1,
-            'DISPLAY_TYPE' => 0,
-            'PREVIEW_STYLE' => 1,
-            'SHOW_PREVIEW' => true,
-            'OPTIONS' => json_encode([
-                ['Value' => false, 'Caption' => 'Offen', 'IconValue' => 'door-open', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFF0000, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFF0000],
-                ['Value' => true, 'Caption' => 'Geschlossen', 'IconValue' => 'door-closed', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00FF00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00FF00]
-            ])
-        ], 30);
+        // DoorOpen wurde nach ApplyChanges verschoben, um Löschen/Neuanlegen zu erlauben
 
         $this->RegisterVariableBoolean('SuperCooling', 'Schnellkühlen', [
             'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
@@ -100,9 +88,19 @@ class MieleFridge extends IPSModuleStrict
             IPS_DeleteVariableProfile('Miele.SuperFreezing');
         }
 
-
-
-        // Aktionen nach CustomPresentation re-aktivieren
+        $this->RegisterVariableBoolean('DoorOpen', 'Tür', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'door-closed',
+            'COLOR' => -1,
+            'CONTENT_COLOR' => -1,
+            'DISPLAY_TYPE' => 0,
+            'PREVIEW_STYLE' => 1,
+            'SHOW_PREVIEW' => true,
+            'OPTIONS' => json_encode([
+                ['Value' => false, 'Caption' => 'Geschlossen', 'IconValue' => 'door-closed', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00FF00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00FF00],
+                ['Value' => true, 'Caption' => 'Offen', 'IconValue' => 'door-open', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFF0000, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFF0000]
+            ])
+        ], 30);        // Aktionen nach CustomPresentation re-aktivieren
         $this->EnableAction('TargetTemp1');
         $this->EnableAction('SuperCooling');
         if (@$this->GetIDForIdent('SuperFreezing') !== false) {
