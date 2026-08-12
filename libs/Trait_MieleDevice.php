@@ -279,10 +279,17 @@ trait MieleDevice_Trait
                     }
                     
                     $total = $elapsedMinutes + $remMinutes;
-                    $progress = ($total > 0) ? (int)round(($elapsedMinutes / $total) * 100) : 0;
+                    if ($remMinutes > 0) {
+                        $progress = (int)round(($elapsedMinutes / $total) * 100);
+                    } else if ($elapsedMinutes > 30) {
+                        $progress = 100;
+                    } else {
+                        $progress = 0;
+                    }
                 } else if ($statusRaw == 4) { // Waiting to start
                     $progress = 0;
                     $elapsedMinutes = 0;
+                    // Keep remMinutes from API if provided
                 } else { // Off, Idle
                     $progress = 0;
                     $elapsedMinutes = 0;
@@ -299,24 +306,35 @@ trait MieleDevice_Trait
                 
                 // StartTime String
                 if (@$this->GetIDForIdent('StartTime') !== false) {
-                    $startTimeStr = '-';
-                    if (isset($state['startTime']) && is_array($state['startTime']) && count($state['startTime']) == 2) {
-                        $startTimeStr = sprintf('%02d:%02d', $state['startTime'][0], $state['startTime'][1]);
+                    if ($statusRaw == 5 || $statusRaw == 7) {
+                        // Running or Finished -> actual start time
+                        $anchor = @$this->ReadAttributeInteger('AnchorStartTime') ?: 0;
+                        if ($anchor > 0) {
+                            $this->SetValue('StartTime', date('H:i', $anchor));
+                        } else {
+                            $this->SetValue('StartTime', '-');
+                        }
+                    } else if ($statusRaw == 4 && isset($state['startTime']) && is_array($state['startTime']) && count($state['startTime']) == 2) {
+                        // Waiting to start -> Delay Start from API
+                        $delayMinutes = ($state['startTime'][0] * 60) + $state['startTime'][1];
+                        if ($delayMinutes > 0) {
+                            $this->SetValue('StartTime', date('H:i', time() + ($delayMinutes * 60)));
+                        } else {
+                            $this->SetValue('StartTime', '-');
+                        }
+                    } else {
+                        $this->SetValue('StartTime', '-');
                     }
-                    $this->SetValue('StartTime', $startTimeStr);
                 }
                 
                 // FinishTime String
                 if (@$this->GetIDForIdent('FinishTime') !== false) {
-                    $finishTimeStr = '-';
-                    if ($statusRaw == 5 || $statusRaw == 7) {
-                        if ($remMinutes > 0) {
-                            $finishTimeStr = date('H:i', time() + ($remMinutes * 60));
-                        } else {
-                            $finishTimeStr = date('H:i');
-                        }
+                    if (($statusRaw == 5 || $statusRaw == 4) && $remMinutes > 0) { // Running or Waiting
+                        $finishTime = time() + ($remMinutes * 60);
+                        $this->SetValue('FinishTime', date('H:i', $finishTime));
+                    } else {
+                        $this->SetValue('FinishTime', '-');
                     }
-                    $this->SetValue('FinishTime', $finishTimeStr);
                 }
             }
 
