@@ -4,6 +4,28 @@ declare(strict_types=1);
 
 trait MieleDevice_Trait
 {
+    private function TranslateMieleText(string $text): string
+    {
+        $map = [
+            'Cottons' => 'Baumwolle', 'Cottons Eco' => 'Baumwolle Eco', 'Minimum iron' => 'Pflegeleicht',
+            'Delicates' => 'Feinwäsche', 'Woollens' => 'Wolle', 'Silks' => 'Seide',
+            'Shirts' => 'Oberhemden', 'Denim' => 'Jeans', 'Dark garments' => 'Dunkles/Jeans',
+            'Outerwear' => 'Outdoor', 'Proofing' => 'Imprägnieren', 'Sportswear' => 'Sportwäsche',
+            'Trainers' => 'Sportschuhe', 'Drain/Spin' => 'Pumpen/Schleudern', 'Separate Rinse' => 'Nur Spülen',
+            'Mixed items' => 'Automatic plus', 'Express 20' => 'Express 20',
+            'Extra dry' => 'Extratrocken', 'Normal plus' => 'Schranktrocken+', 'Normal' => 'Schranktrocken',
+            'Slightly dry' => 'Leicht trocken', 'Hand iron' => 'Bügelfeucht', 'Machine iron' => 'Mangelfeucht',
+            'Smoothing' => 'Glätten',
+            'Off' => 'Aus', 'Idle' => 'Bereit', 'Programmed' => 'Programmiert', 'Waiting to start' => 'Wartet auf Start',
+            'Running' => 'Läuft', 'In use' => 'In Betrieb', 'Pause' => 'Pause', 'Program ended' => 'Programm beendet',
+            'Finished' => 'Fertig', 'Failure' => 'Fehler', 'Program cancelled' => 'Abgebrochen',
+            'Pre-wash' => 'Vorwäsche', 'Main wash' => 'Hauptwäsche', 'Rinse' => 'Spülen',
+            'Rinse & Hold' => 'Spülstopp', 'Spin' => 'Schleudern', 'Drying' => 'Trocknen',
+            'Cooling down' => 'Abkühlen', 'Anti-crease' => 'Knitterschutz'
+        ];
+        return $map[$text] ?? $text;
+    }
+
     public function ReceiveData(string $JSONString): string
     {
         $data = json_decode($JSONString, true);
@@ -115,10 +137,10 @@ trait MieleDevice_Trait
 
             // === TEXT & STATUS ===
             if (isset($state['status']['value_localized']) && @$this->GetIDForIdent('StatusText') !== false) {
-                $newStatus = (string)$state['status']['value_localized'];
+                $newStatus = $this->TranslateMieleText((string)$state['status']['value_localized']);
                 if (@$this->GetValue('StatusText') !== $newStatus) {
                     if (method_exists($this, 'SLogInfo')) {
-                        $this->SLogInfo("Status gendert: " . $newStatus);
+                        $this->SLogInfo("Status geändert: " . $newStatus);
                     }
                 }
                 $this->SetValue('StatusText', $newStatus);
@@ -155,10 +177,10 @@ trait MieleDevice_Trait
             
             // Program info
             if (isset($state['ProgramID']['value_localized']) && @$this->GetIDForIdent('ProgramName') !== false) {
-                $this->SetValue('ProgramName', (string)$state['ProgramID']['value_localized']);
+                $this->SetValue('ProgramName', $this->TranslateMieleText((string)$state['ProgramID']['value_localized']));
             }
             if (isset($state['programPhase']['value_localized']) && @$this->GetIDForIdent('ProgramPhaseText') !== false) {
-                $this->SetValue('ProgramPhaseText', (string)$state['programPhase']['value_localized']);
+                $this->SetValue('ProgramPhaseText', $this->TranslateMieleText((string)$state['programPhase']['value_localized']));
             }
 
             // Target Temperature
@@ -193,7 +215,7 @@ trait MieleDevice_Trait
             if (isset($state['dryingStep']) && @$this->GetIDForIdent('DrynessLevel') !== false) {
                 $valLoc = (string)($state['dryingStep']['value_localized'] ?? '');
                 if (trim($valLoc) !== '') {
-                    $this->SetValue('DrynessLevel', $valLoc);
+                    $this->SetValue('DrynessLevel', $this->TranslateMieleText($valLoc));
                 } else if (isset($state['dryingStep']['value_raw']) && (int)$state['dryingStep']['value_raw'] > 0) {
                     $this->SetValue('DrynessLevel', 'Stufe ' . (int)$state['dryingStep']['value_raw']);
                 } else {
