@@ -211,6 +211,8 @@ class MieleSplitter extends IPSModuleStrict
         
         @IPS_SetProperty($parentId, 'Active', true);
         @IPS_ApplyChanges($parentId);
+        
+        $this->SetBuffer('LastSSEReceive', (string)time());
 
         $this->SendDebug('SSE Config', 'Updated SSE Client headers with new token' . ($forceRestart ? ' (Forced Restart)' : ''), 0);
     }
@@ -331,7 +333,8 @@ class MieleSplitter extends IPSModuleStrict
 
         // 1. Watchdog: Check if SSE connection is dead
         $lastReceive = (int)$this->GetBuffer('LastSSEReceive');
-        if ($lastReceive > 0 && (time() - $lastReceive > 120)) {
+        // Treat 0 as dead if we haven't received anything (though UpdateSSEClientConfig sets it now)
+        if ($lastReceive == 0 || (time() - $lastReceive > 120)) {
             $this->SendDebug('Watchdog', 'Kein SSE Event seit 120s! Erzwinge Reconnect...', 0);
             $this->SLog('WARNING', 'SSE Watchdog', 'Keine Daten seit >120s erhalten, Reconnect & Fallback-Polling...');
             
