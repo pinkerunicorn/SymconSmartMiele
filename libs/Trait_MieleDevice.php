@@ -296,8 +296,8 @@ trait MieleDevice_Trait
                         }
                         $elapsedMinutes = (int)round((time() - $anchor) / 60);
                     }
-                    if (@$this->GetIDForIdent('AnchorStartTime') !== false && method_exists($this, 'WriteAttributeInteger')) {
-                        $this->WriteAttributeInteger('AnchorStartTime', $anchor);
+                    if (method_exists($this, 'WriteAttributeInteger')) {
+                        @$this->WriteAttributeInteger('AnchorStartTime', $anchor);
                     }
                     
                     $total = $elapsedMinutes + $remMinutes;
@@ -316,8 +316,8 @@ trait MieleDevice_Trait
                     $progress = 0;
                     $elapsedMinutes = 0;
                     $remMinutes = 0;
-                    if (@$this->GetIDForIdent('AnchorStartTime') !== false && method_exists($this, 'WriteAttributeInteger')) {
-                        $this->WriteAttributeInteger('AnchorStartTime', 0);
+                    if (method_exists($this, 'WriteAttributeInteger')) {
+                        @$this->WriteAttributeInteger('AnchorStartTime', 0);
                     }
                 }
 
