@@ -190,8 +190,15 @@ trait MieleDevice_Trait
                 if ($s > -1) $this->SetValue('SpinSpeed', (int)$s);
             }
             // Dryness Level
-            if (isset($state['dryingStep']['value_localized']) && @$this->GetIDForIdent('DrynessLevel') !== false) {
-                $this->SetValue('DrynessLevel', (string)$state['dryingStep']['value_localized']);
+            if (isset($state['dryingStep']) && @$this->GetIDForIdent('DrynessLevel') !== false) {
+                $valLoc = (string)($state['dryingStep']['value_localized'] ?? '');
+                if (trim($valLoc) !== '') {
+                    $this->SetValue('DrynessLevel', $valLoc);
+                } else if (isset($state['dryingStep']['value_raw']) && (int)$state['dryingStep']['value_raw'] > 0) {
+                    $this->SetValue('DrynessLevel', 'Stufe ' . (int)$state['dryingStep']['value_raw']);
+                } else {
+                    $this->SetValue('DrynessLevel', '-');
+                }
             }
 
             // Eco Feedback
