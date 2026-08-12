@@ -180,7 +180,7 @@ class MieleSplitter extends IPSModuleStrict
     /**
      * Updates the SSE Client I/O instance with new Bearer token after refresh.
      */
-    private function UpdateSSEClientConfig(string $token): void
+    private function UpdateSSEClientConfig(string $token, bool $forceRestart = false): void
     {
         $instance = @IPS_GetInstance($this->InstanceID);
         if (!$instance || $instance['ConnectionID'] <= 0) {
@@ -202,10 +202,17 @@ class MieleSplitter extends IPSModuleStrict
 
         @IPS_SetProperty($parentId, 'URL', self::SSE_URL);
         @IPS_SetProperty($parentId, 'Headers', json_encode($headers));
+        
+        if ($forceRestart) {
+            @IPS_SetProperty($parentId, 'Active', false);
+            @IPS_ApplyChanges($parentId);
+            IPS_Sleep(500);
+        }
+        
         @IPS_SetProperty($parentId, 'Active', true);
         @IPS_ApplyChanges($parentId);
 
-        $this->SendDebug('SSE Config', 'Updated SSE Client headers with new token', 0);
+        $this->SendDebug('SSE Config', 'Updated SSE Client headers with new token' . ($forceRestart ? ' (Forced Restart)' : ''), 0);
     }
 
     //==========================================================================
@@ -320,16 +327,43 @@ class MieleSplitter extends IPSModuleStrict
     public function CheckTokenRefresh(): void
     {
         $expires = $this->ReadAttributeInteger('TokenExpires');
+        $token = $this->GetToken();
 
-        // Token expires soon or already expired
+        // 1. Watchdog: Check if SSE connection is dead
+        $lastReceive = (int)$this->GetBuffer('LastSSEReceive');
+        if ($lastReceive > 0 && (time() - $lastReceive > 120)) {
+            $this->SendDebug('Watchdog', 'Kein SSE Event seit 120s! Erzwinge Reconnect...', 0);
+            $this->SLog('WARNING', 'SSE Watchdog', 'Keine Daten seit >120s erhalten, Reconnect & Fallback-Polling...');
+            
+            if ($token) {
+                // Fallback Polling: fetch current state so devices don't get out of sync
+                $devices = $this->ApiGet('/v1/devices');
+                if (is_array($devices)) {
+                    $payload = [
+                        'DataID'  => '{D90209DA-6A59-4DD8-96BC-6878CE50ACCC}',
+                        'Type'    => 'DeviceUpdate',
+                        'Devices' => $devices
+                    ];
+                    $this->SendDataToChildren(json_encode($payload));
+                }
+                
+                // Force SSE Reconnect
+                $this->UpdateSSEClientConfig($token, true);
+                $this->SetValue('SSEStatus', 'Watchdog Reconnect...');
+            }
+            
+            // Reset buffer so we don't reconnect every minute if Miele is completely offline
+            $this->SetBuffer('LastSSEReceive', (string)time());
+        }
+
+        // 2. Token Refresh
         if ($expires <= time() + self::TOKEN_REFRESH_MARGIN) {
             $this->SendDebug('TokenRefresh', 'Token expiring, refreshing...', 0);
-            $token = $this->GetToken();
             if ($token) {
-                $this->UpdateSSEClientConfig($token);
-                $this->SLogInfo('OAuth2 Token erfolgreich erneuert');
+                $this->UpdateSSEClientConfig($token, false);
+                $this->SLog('INFO', 'OAuth2', 'Token erfolgreich erneuert');
             } else {
-                $this->SLogError('OAuth2 Token-Erneuerung fehlgeschlagen');
+                $this->SLog('ERROR', 'OAuth2', 'Token-Erneuerung fehlgeschlagen');
                 $this->SetValue('SSEStatus', 'Token-Erneuerung fehlgeschlagen');
             }
         }
@@ -450,7 +484,7 @@ class MieleSplitter extends IPSModuleStrict
     {
         $token = $this->GetToken();
         if ($token) {
-            $this->UpdateSSEClientConfig($token);
+            $this->UpdateSSEClientConfig($token, true);
             $this->SetValue('SSEStatus', 'Reconnect...');
             echo "SSE-Verbindung wird neu aufgebaut.\n";
         } else {
