@@ -168,7 +168,7 @@ class MieleFridge extends IPSModuleStrict
         }
 
         if (!empty($actionData)) {
-            $success = $this->Miele_SendAction($deviceId, $actionData);
+            $success = $this->Miele_SendAction($actionData);
 
             if ($success) {
                 $this->SetValue($Ident, $Value);
