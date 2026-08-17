@@ -26,18 +26,18 @@ class MieleFridge extends IPSModuleStrict
         // Variables
         $this->RegisterVariableString('StatusText', 'Status', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Information'
+            'ICON' => 'info'
         ], 15);
         
         $this->RegisterVariableInteger('Temp1', 'Ist-Temperatur (Zone 1)', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => ' °C',
-            'ICON' => 'Temperature'
+            'ICON' => 'temperature-half'
         ], 20);
         $this->RegisterVariableInteger('TargetTemp1', 'Ziel-Temperatur (Zone 1)', [
             'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
             'SUFFIX' => ' °C',
-            'ICON' => 'Temperature',
+            'ICON' => 'temperature-half',
             'MIN' => 2,
             'MAX' => 9,
             'STEP' => 1
@@ -48,7 +48,7 @@ class MieleFridge extends IPSModuleStrict
 
         $this->RegisterVariableBoolean('SuperCooling', 'Schnellkühlen', [
             'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
-            'ICON' => 'Power'
+            'ICON' => 'power-off'
         ], 35);
         $this->EnableAction('SuperCooling');
 
@@ -56,7 +56,7 @@ class MieleFridge extends IPSModuleStrict
         if ($this->ReadPropertyBoolean('EnableSuperFreezing')) {
             $this->RegisterVariableBoolean('SuperFreezing', 'Schnellgefrieren', [
                 'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
-                'ICON' => 'Snowflake'
+                'ICON' => 'snowflake'
             ], 36);
             $this->EnableAction('SuperFreezing');
         } else {

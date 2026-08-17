@@ -26,48 +26,48 @@ class MieleHood extends IPSModuleStrict
         // Variables
         $this->RegisterVariableInteger('PowerSupply', 'Spannungsversorgung', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Power',
+            'ICON' => 'power-off',
             'INTERVALS_ACTIVE' => true,
             'INTERVALS' => json_encode([
-                [ 'IntervalMinValue' => 0, 'IntervalMaxValue' => 1, 'ConstantActive' => true, 'ConstantValue' => 'Unbekannt', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'Power', 'ColorActive' => true, 'ColorValue' => -1, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ],
-                [ 'IntervalMinValue' => 1, 'IntervalMaxValue' => 2, 'ConstantActive' => true, 'ConstantValue' => 'Eingeschaltet', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'Power', 'ColorActive' => true, 'ColorValue' => 0x00CC00, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ],
-                [ 'IntervalMinValue' => 2, 'IntervalMaxValue' => 3, 'ConstantActive' => true, 'ConstantValue' => 'Ausgeschaltet', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'Power', 'ColorActive' => true, 'ColorValue' => 0xFF0000, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ]
+                [ 'IntervalMinValue' => 0, 'IntervalMaxValue' => 1, 'ConstantActive' => true, 'ConstantValue' => 'Unbekannt', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'power-off', 'ColorActive' => true, 'ColorValue' => -1, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ],
+                [ 'IntervalMinValue' => 1, 'IntervalMaxValue' => 2, 'ConstantActive' => true, 'ConstantValue' => 'Eingeschaltet', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'power-off', 'ColorActive' => true, 'ColorValue' => 0x00CC00, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ],
+                [ 'IntervalMinValue' => 2, 'IntervalMaxValue' => 3, 'ConstantActive' => true, 'ConstantValue' => 'Ausgeschaltet', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'power-off', 'ColorActive' => true, 'ColorValue' => 0xFF0000, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ]
             ])
         ], 5);
 
         $this->RegisterVariableString('StatusText', 'Status', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Information'
+            'ICON' => 'info'
         ], 10);
 
         $this->RegisterVariableBoolean('PowerOn', 'Eingeschaltet', [
             'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
-            'ICON' => 'Power'
+            'ICON' => 'power-off'
         ], 15);
         $this->EnableAction('PowerOn');
 
         $this->RegisterVariableBoolean('Light', 'Licht', [
             'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
-            'ICON' => 'Bulb'
+            'ICON' => 'lightbulb'
         ], 20);
         $this->EnableAction('Light');
 
         $this->RegisterVariableBoolean('AmbientLight', 'Stimmungslicht', [
             'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
-            'ICON' => 'Bulb'
+            'ICON' => 'lightbulb'
         ], 25);
         $this->EnableAction('AmbientLight');
 
         // Lüfterstufe als Dropdown
         $ventilationPres = [
             'PRESENTATION' => VARIABLE_PRESENTATION_ENUMERATION,
-            'ICON' => 'Ventilator',
+            'ICON' => 'fan',
             'OPTIONS' => json_encode([
                 ['Value' => 0, 'Caption' => 'Aus', 'IconActive' => false, 'IconValue' => '', 'Color' => -1],
-                ['Value' => 1, 'Caption' => 'Stufe 1', 'IconActive' => true, 'IconValue' => 'Ventilator', 'Color' => 0x00CC00],
-                ['Value' => 2, 'Caption' => 'Stufe 2', 'IconActive' => true, 'IconValue' => 'Ventilator', 'Color' => 0xFFAA00],
-                ['Value' => 3, 'Caption' => 'Stufe 3', 'IconActive' => true, 'IconValue' => 'Ventilator', 'Color' => 0xFF6600],
-                ['Value' => 4, 'Caption' => 'Booster', 'IconActive' => true, 'IconValue' => 'Ventilator', 'Color' => 0xFF0000]
+                ['Value' => 1, 'Caption' => 'Stufe 1', 'IconActive' => true, 'IconValue' => 'fan', 'Color' => 0x00CC00],
+                ['Value' => 2, 'Caption' => 'Stufe 2', 'IconActive' => true, 'IconValue' => 'fan', 'Color' => 0xFFAA00],
+                ['Value' => 3, 'Caption' => 'Stufe 3', 'IconActive' => true, 'IconValue' => 'fan', 'Color' => 0xFF6600],
+                ['Value' => 4, 'Caption' => 'Booster', 'IconActive' => true, 'IconValue' => 'fan', 'Color' => 0xFF0000]
             ])
         ];
         $this->RegisterVariableInteger('VentilationStep', 'Lüfterstufe', $ventilationPres, 30);
@@ -75,40 +75,40 @@ class MieleHood extends IPSModuleStrict
 
         $this->RegisterVariableBoolean('SignalInfo', 'Hinweis vorhanden (z.B. Filter)', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Warning',
+            'ICON' => 'triangle-exclamation',
             'COLOR' => -1,
             'CONTENT_COLOR' => -1,
             'DISPLAY_TYPE' => 0,
             'PREVIEW_STYLE' => 1,
             'SHOW_PREVIEW' => true,
             'OPTIONS' => json_encode([
-                ['Value' => false, 'Caption' => 'Kein Hinweis', 'IconValue' => 'Information', 'IconActive' => true, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
-                ['Value' => true, 'Caption' => 'Hinweis!', 'IconValue' => 'Warning', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFFA500, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFFA500]
+                ['Value' => false, 'Caption' => 'Kein Hinweis', 'IconValue' => 'circle-info', 'IconActive' => true, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
+                ['Value' => true, 'Caption' => 'Hinweis!', 'IconValue' => 'triangle-exclamation', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFFA500, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFFA500]
             ])
         ], 40);
         $this->RegisterVariableBoolean('SignalFailure', 'Fehler erkannt', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Alert',
+            'ICON' => 'triangle-exclamation',
             'COLOR' => -1,
             'CONTENT_COLOR' => -1,
             'DISPLAY_TYPE' => 0,
             'PREVIEW_STYLE' => 1,
             'SHOW_PREVIEW' => true,
             'OPTIONS' => json_encode([
-                ['Value' => false, 'Caption' => 'OK', 'IconValue' => 'Ok', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00CC00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00CC00],
-                ['Value' => true, 'Caption' => 'Fehler!', 'IconValue' => 'Alert', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFF0000, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFF0000]
+                ['Value' => false, 'Caption' => 'OK', 'IconValue' => 'circle-check', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00CC00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00CC00],
+                ['Value' => true, 'Caption' => 'Fehler!', 'IconValue' => 'triangle-exclamation', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFF0000, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFF0000]
             ])
         ], 41);
 
         $this->RegisterVariableInteger('GreaseFilterSaturation', 'Fettfilter-Sättigung', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON'         => 'Gauge',
+            'ICON'         => 'filter',
             'SUFFIX'       => '%'
         ], 50);
 
         $this->RegisterVariableInteger('CarbonFilterSaturation', 'Kohlefilter-Sättigung', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON'         => 'Gauge',
+            'ICON'         => 'filter',
             'SUFFIX'       => '%'
         ], 51);
     }

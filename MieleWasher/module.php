@@ -35,113 +35,113 @@ class MieleWasher extends IPSModuleStrict
         // Variables
         $this->RegisterVariableInteger('PowerSupply', 'Spannungsversorgung', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Power',
+            'ICON' => 'power-off',
             'INTERVALS_ACTIVE' => true,
             'INTERVALS' => json_encode([
-                [ 'IntervalMinValue' => 0, 'IntervalMaxValue' => 1, 'ConstantActive' => true, 'ConstantValue' => 'Unbekannt', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'Power', 'ColorActive' => true, 'ColorValue' => -1, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ],
-                [ 'IntervalMinValue' => 1, 'IntervalMaxValue' => 2, 'ConstantActive' => true, 'ConstantValue' => 'Eingeschaltet', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'Power', 'ColorActive' => true, 'ColorValue' => 0x00CC00, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ],
-                [ 'IntervalMinValue' => 2, 'IntervalMaxValue' => 3, 'ConstantActive' => true, 'ConstantValue' => 'Ausgeschaltet', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'Power', 'ColorActive' => true, 'ColorValue' => 0xFF0000, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ]
+                [ 'IntervalMinValue' => 0, 'IntervalMaxValue' => 1, 'ConstantActive' => true, 'ConstantValue' => 'Unbekannt', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'power-off', 'ColorActive' => true, 'ColorValue' => -1, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ],
+                [ 'IntervalMinValue' => 1, 'IntervalMaxValue' => 2, 'ConstantActive' => true, 'ConstantValue' => 'Eingeschaltet', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'power-off', 'ColorActive' => true, 'ColorValue' => 0x00CC00, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ],
+                [ 'IntervalMinValue' => 2, 'IntervalMaxValue' => 3, 'ConstantActive' => true, 'ConstantValue' => 'Ausgeschaltet', 'ConversionFactor' => 1, 'PrefixActive' => false, 'PrefixValue' => '', 'SuffixActive' => false, 'SuffixValue' => '', 'DigitsActive' => false, 'DigitsValue' => 0, 'IconActive' => true, 'IconValue' => 'power-off', 'ColorActive' => true, 'ColorValue' => 0xFF0000, 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF ]
             ])
         ], 5);
 
         $this->RegisterVariableBoolean('PowerOn', 'Eingeschaltet', [
             'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
-            'ICON' => 'Power'
+            'ICON' => 'power-off'
         ], 8);
         $this->EnableAction('PowerOn');
 
         // Aktion als Dropdown
         $processActionPres = [
             'PRESENTATION' => VARIABLE_PRESENTATION_ENUMERATION,
-            'ICON' => 'Execute',
+            'ICON' => 'play',
             'OPTIONS' => json_encode([
                 ['Value' => 0, 'Caption' => 'Keine Aktion', 'IconActive' => false, 'IconValue' => '', 'Color' => -1],
-                ['Value' => 1, 'Caption' => 'Start', 'IconActive' => true, 'IconValue' => 'Execute', 'Color' => 0x00CC00],
+                ['Value' => 1, 'Caption' => 'Start', 'IconActive' => true, 'IconValue' => 'play', 'Color' => 0x00CC00],
                 ['Value' => 2, 'Caption' => 'Stop', 'IconActive' => true, 'IconValue' => 'Close', 'Color' => 0xFF0000],
-                ['Value' => 3, 'Caption' => 'Pause', 'IconActive' => true, 'IconValue' => 'Clock', 'Color' => 0xFFAA00]
+                ['Value' => 3, 'Caption' => 'Pause', 'IconActive' => true, 'IconValue' => 'clock', 'Color' => 0xFFAA00]
             ])
         ];
         $this->RegisterVariableInteger('ProcessAction', 'Aktion', $processActionPres, 9);
         $this->EnableAction('ProcessAction');
         $this->RegisterVariableString('StatusText', 'Status', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Information'
+            'ICON' => 'info'
         ], 10);
         $this->RegisterVariableBoolean('SignalInfo', 'Hinweis vorhanden', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Information',
+            'ICON' => 'circle-info',
             'COLOR' => -1,
             'CONTENT_COLOR' => -1,
             'DISPLAY_TYPE' => 0,
             'PREVIEW_STYLE' => 1,
             'SHOW_PREVIEW' => true,
             'OPTIONS' => json_encode([
-                ['Value' => false, 'Caption' => 'Kein Hinweis', 'IconValue' => 'Information', 'IconActive' => false, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
-                ['Value' => true, 'Caption' => 'Hinweis!', 'IconValue' => 'Warning', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFFA500, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFFA500]
+                ['Value' => false, 'Caption' => 'Kein Hinweis', 'IconValue' => 'circle-info', 'IconActive' => false, 'ColorActive' => false, 'ColorDisplay' => -1, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => -1],
+                ['Value' => true, 'Caption' => 'Hinweis!', 'IconValue' => 'triangle-exclamation', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFFA500, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFFA500]
             ])
         ], 11);
         $this->RegisterVariableBoolean('SignalFailure', 'Fehler erkannt', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Alert',
+            'ICON' => 'triangle-exclamation',
             'COLOR' => -1,
             'CONTENT_COLOR' => -1,
             'DISPLAY_TYPE' => 0,
             'PREVIEW_STYLE' => 1,
             'SHOW_PREVIEW' => true,
             'OPTIONS' => json_encode([
-                ['Value' => false, 'Caption' => 'OK', 'IconValue' => 'Ok', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00CC00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00CC00],
-                ['Value' => true, 'Caption' => 'Fehler!', 'IconValue' => 'Alert', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFF0000, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFF0000]
+                ['Value' => false, 'Caption' => 'OK', 'IconValue' => 'circle-check', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0x00CC00, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0x00CC00],
+                ['Value' => true, 'Caption' => 'Fehler!', 'IconValue' => 'triangle-exclamation', 'IconActive' => true, 'ColorActive' => true, 'ColorDisplay' => 0xFF0000, 'ContentColorActive' => false, 'ContentColorDisplay' => -1, 'ContentColorValue' => -1, 'ColorValue' => 0xFF0000]
             ])
         ], 12);
         
         $this->RegisterVariableString('ProgramName', 'Programmbezeichnung', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Script'
+            'ICON' => 'bars-progress'
         ], 21);
         $this->RegisterVariableString('ProgramPhaseText', 'Programm-Phase', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Script'
+            'ICON' => 'bars-progress'
         ], 22);
         
         $this->RegisterVariableInteger('ElapsedTime', 'Verstrichene Zeit', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => 'min',
-            'ICON' => 'Clock'
+            'ICON' => 'stopwatch'
         ], 27);
         
         $this->RegisterVariableString('StartTime', 'Start um', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Clock'
+            'ICON' => 'calendar-days'
         ], 23);
         $this->RegisterVariableString('FinishTime', 'Ende um', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Clock'
+            'ICON' => 'calendar-days'
         ], 24);
         $this->RegisterVariableInteger('RemainingTime', 'Verbleibende Zeit', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => 'min',
-            'ICON' => 'Clock'
+            'ICON' => 'hourglass-half'
         ], 28);
         $this->RegisterVariableInteger('RemainingTimeSeconds', 'Verbleibende Zeit (Sekunden)', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => 's',
-            'ICON' => 'Clock'
+            'ICON' => 'hourglass-half'
         ], 29);
         $this->RegisterVariableInteger('ProgressPct', 'Arbeitsfortschritt', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => '%',
-            'ICON' => 'Intensity'
+            'ICON' => 'bars-progress'
         ], 30);
         
         $this->RegisterVariableInteger('Temperature', 'Temperatur', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => '°C',
-            'ICON' => 'Temperature'
+            'ICON' => 'temperature-half'
         ], 31);
         $this->RegisterVariableInteger('SpinSpeed', 'Drehzahl', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => 'U/min',
-            'ICON' => 'Motion'
+            'ICON' => 'gauge-high'
         ], 32);
         $this->RegisterVariableBoolean('Door', 'Tür', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
@@ -160,34 +160,34 @@ class MieleWasher extends IPSModuleStrict
         $this->RegisterVariableInteger('TwinDos1', 'TwinDos 1 Füllstand', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => '%',
-            'ICON' => 'Drop'
+            'ICON' => 'bottle-droplet'
         ], 40);
         $this->RegisterVariableInteger('TwinDos2', 'TwinDos 2 Füllstand', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => '%',
-            'ICON' => 'Drop'
+            'ICON' => 'bottle-droplet'
         ], 45);
         
         $this->RegisterVariableFloat('CurrentWaterConsumption', 'aktueller Wasserverbrauch', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => 'l',
-            'ICON' => 'Drop'
+            'ICON' => 'faucet-drip'
         ], 50);
         $this->RegisterVariableFloat('CurrentEnergyConsumption', 'aktueller Energieverbrauch', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => 'kWh',
-            'ICON' => 'Electricity'
+            'ICON' => 'bolt'
         ], 55);
         
         $this->RegisterVariableFloat('LastEnergyConsumption', 'letzter Energieverbrauch', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => 'kWh',
-            'ICON' => 'Electricity'
+            'ICON' => 'bolt'
         ], 60);
         $this->RegisterVariableFloat('LastWaterConsumption', 'letzter Wasserverbrauch', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'SUFFIX' => 'l',
-            'ICON' => 'Drops'
+            'ICON' => 'faucet-drip'
         ], 61);
     }
 

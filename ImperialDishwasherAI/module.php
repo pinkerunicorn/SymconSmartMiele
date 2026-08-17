@@ -36,7 +36,7 @@ class ImperialDishwasherAI extends IPSModuleStrict {
                 'PrefixActive' => false, 'PrefixValue' => '',
                 'SuffixActive' => false, 'SuffixValue' => '',
                 'DigitsActive' => false, 'DigitsValue' => 0,
-                'IconActive' => true, 'IconValue' => 'Information',
+                'IconActive' => true, 'IconValue' => 'circle-info',
                 'ColorActive' => true, 'ColorValue' => -1,
                 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF
             ],
@@ -47,7 +47,7 @@ class ImperialDishwasherAI extends IPSModuleStrict {
                 'PrefixActive' => false, 'PrefixValue' => '',
                 'SuffixActive' => false, 'SuffixValue' => '',
                 'DigitsActive' => false, 'DigitsValue' => 0,
-                'IconActive' => true, 'IconValue' => 'Information',
+                'IconActive' => true, 'IconValue' => 'circle-info',
                 'ColorActive' => true, 'ColorValue' => 0x0088FF,
                 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF
             ],
@@ -58,7 +58,7 @@ class ImperialDishwasherAI extends IPSModuleStrict {
                 'PrefixActive' => false, 'PrefixValue' => '',
                 'SuffixActive' => false, 'SuffixValue' => '',
                 'DigitsActive' => false, 'DigitsValue' => 0,
-                'IconActive' => true, 'IconValue' => 'Information',
+                'IconActive' => true, 'IconValue' => 'circle-info',
                 'ColorActive' => true, 'ColorValue' => 0x00CC00,
                 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF
             ],
@@ -69,7 +69,7 @@ class ImperialDishwasherAI extends IPSModuleStrict {
                 'PrefixActive' => false, 'PrefixValue' => '',
                 'SuffixActive' => false, 'SuffixValue' => '',
                 'DigitsActive' => false, 'DigitsValue' => 0,
-                'IconActive' => true, 'IconValue' => 'Information',
+                'IconActive' => true, 'IconValue' => 'circle-info',
                 'ColorActive' => true, 'ColorValue' => 0xFFA500,
                 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF
             ]
@@ -77,29 +77,29 @@ class ImperialDishwasherAI extends IPSModuleStrict {
 
         $this->RegisterVariableInteger('Status', 'Status', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Information',
+            'ICON' => 'info',
             'INTERVALS_ACTIVE' => true,
             'INTERVALS' => $statusIntervals
         ], 1);
-        $this->RegisterVariableString('CurrentPhase', 'Aktuelle Phase', ['PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION, 'ICON' => 'Script'], 2);
+        $this->RegisterVariableString('CurrentPhase', 'Aktuelle Phase', ['PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION, 'ICON' => 'bars-progress'], 2);
         $this->RegisterVariableInteger('ActiveSince', 'Aktiv Seit', [
             'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
-            'ICON'         => 'Clock'
+            'ICON'         => 'clock'
         ], 3);
-        $this->RegisterVariableString('LastGeminiPrompt', 'Letzter KI Prompt', ['PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION, 'ICON' => 'Information'], 4);
-        $this->RegisterVariableString('LastGeminiResponse', 'Letzte KI Antwort', ['PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION, 'ICON' => 'Information'], 5);
+        $this->RegisterVariableString('LastGeminiPrompt', 'Letzter KI Prompt', ['PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION, 'ICON' => 'sparkles'], 4);
+        $this->RegisterVariableString('LastGeminiResponse', 'Letzte KI Antwort', ['PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION, 'ICON' => 'sparkles'], 5);
         $this->RegisterVariableInteger('RemainingTime', 'Restlaufzeit', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON'         => 'Clock',
+            'ICON'         => 'hourglass-half',
             'SUFFIX'       => ' Sek'
         ], 6);
         $this->RegisterVariableInteger('ExpectedEnd', 'Erwartetes Ende', [
             'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
-            'ICON'         => 'Clock'
+            'ICON'         => 'calendar-days'
         ], 7);
         $this->RegisterVariableInteger('Progress', 'Fortschritt', [
             'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
-            'ICON'         => 'Motion',
+            'ICON'         => 'bars-progress',
             'SUFFIX'       => '%',
             'MIN'          => 0,
             'MAX'          => 100
@@ -116,7 +116,7 @@ class ImperialDishwasherAI extends IPSModuleStrict {
         IPS_SetHidden($this->GetIDForIdent('LastSessionData'), true);
 
         // Vestaboard: Kurzzusammenfassung für VestaboardGenerator
-        $this->RegisterVariableString('VestaboardMessage', 'Vestaboard Nachricht', ['PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION, 'ICON' => 'Script'], 101);
+        $this->RegisterVariableString('VestaboardMessage', 'Vestaboard Nachricht', ['PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION, 'ICON' => 'file-code'], 101);
     }
 
     public function ApplyChanges(): void {

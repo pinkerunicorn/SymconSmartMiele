@@ -48,7 +48,7 @@ class MieleSplitter extends IPSModuleStrict
         // Connection monitoring variable
         $this->RegisterVariableString('SSEStatus', 'SSE Verbindung', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'Network'
+            'ICON' => 'network-wired'
         ], 10);
     }
 
