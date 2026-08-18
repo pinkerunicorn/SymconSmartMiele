@@ -91,7 +91,7 @@ class ImperialDishwasherAI extends IPSModuleStrict {
         $this->RegisterVariableInteger('RemainingTime', 'Restlaufzeit', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON'         => 'hourglass-half',
-            'SUFFIX'       => ' Sek'
+            'SUFFIX'       => ' Min'
         ], 6);
         $this->RegisterVariableInteger('ExpectedEnd', 'Erwartetes Ende', [
             'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
@@ -362,7 +362,7 @@ class ImperialDishwasherAI extends IPSModuleStrict {
         if (isset($parsed['remainingMinutes'])) {
             $remMin = (int)$parsed['remainingMinutes'];
             $remSec = $remMin * 60;
-            $this->SetValue('RemainingTime', $remSec);
+            $this->SetValue('RemainingTime', $remMin);
 
             // Vestaboard: Kurz-Status mit Restzeit
             if ($remMin > 0) {
