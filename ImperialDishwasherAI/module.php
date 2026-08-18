@@ -120,16 +120,76 @@ class ImperialDishwasherAI extends IPSModuleStrict {
     public function ApplyChanges(): void {
         parent::ApplyChanges();
 
-        IPS_SetDisabled($this->GetIDForIdent('Status'), true);
+        $statusIntervals = json_encode([
+            [
+                'IntervalMinValue' => 0, 'IntervalMaxValue' => 0,
+                'ConstantActive' => true, 'ConstantValue' => 'Aus',
+                'ConversionFactor' => 1,
+                'PrefixActive' => false, 'PrefixValue' => '',
+                'SuffixActive' => false, 'SuffixValue' => '',
+                'DigitsActive' => false, 'DigitsValue' => 0,
+                'IconActive' => true, 'IconValue' => 'circle-info',
+                'ColorActive' => true, 'ColorValue' => -1,
+                'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF
+            ],
+            [
+                'IntervalMinValue' => 1, 'IntervalMaxValue' => 1,
+                'ConstantActive' => true, 'ConstantValue' => 'Start',
+                'ConversionFactor' => 1,
+                'PrefixActive' => false, 'PrefixValue' => '',
+                'SuffixActive' => false, 'SuffixValue' => '',
+                'DigitsActive' => false, 'DigitsValue' => 0,
+                'IconActive' => true, 'IconValue' => 'circle-info',
+                'ColorActive' => true, 'ColorValue' => 0x0088FF,
+                'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF
+            ],
+            [
+                'IntervalMinValue' => 2, 'IntervalMaxValue' => 2,
+                'ConstantActive' => true, 'ConstantValue' => 'Aktiv',
+                'ConversionFactor' => 1,
+                'PrefixActive' => false, 'PrefixValue' => '',
+                'SuffixActive' => false, 'SuffixValue' => '',
+                'DigitsActive' => false, 'DigitsValue' => 0,
+                'IconActive' => true, 'IconValue' => 'circle-info',
+                'ColorActive' => true, 'ColorValue' => 0x00CC00,
+                'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF
+            ],
+            [
+                'IntervalMinValue' => 3, 'IntervalMaxValue' => 3,
+                'ConstantActive' => true, 'ConstantValue' => 'Fertig',
+                'ConversionFactor' => 1,
+                'PrefixActive' => false, 'PrefixValue' => '',
+                'SuffixActive' => false, 'SuffixValue' => '',
+                'DigitsActive' => false, 'DigitsValue' => 0,
+                'IconActive' => true, 'IconValue' => 'circle-info',
+                'ColorActive' => true, 'ColorValue' => 0xFFA500,
+                'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF
+            ]
+        ]);
+
+        $this->RegisterVariableInteger('Status', 'Status', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'info',
+            'INTERVALS_ACTIVE' => true,
+            'INTERVALS' => $statusIntervals
+        ], 1);
+        $this->RegisterVariableInteger('Progress', 'Fortschritt', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON'         => 'bars-progress',
+            'SUFFIX'       => '%'
+        ], 8);
+
+        $statusId = @$this->GetIDForIdent('Status');
+        if ($statusId) {
+            IPS_SetDisabled($statusId, true);
+            IPS_SetVariableCustomProfile($statusId, '');
+        }
 
         $powerVarID = $this->ReadPropertyInteger('PowerVariableID');
         if ($powerVarID > 1 && @IPS_ObjectExists($powerVarID)) {
             $this->RegisterReference($powerVarID);
             $this->RegisterMessage($powerVarID, VM_UPDATE);
         }
-
-
-        IPS_SetVariableCustomProfile($this->GetIDForIdent('Status'), '');
 
         if (IPS_VariableProfileExists('Dishwasher.Status')) {
             IPS_DeleteVariableProfile('Dishwasher.Status');
@@ -181,7 +241,8 @@ class ImperialDishwasherAI extends IPSModuleStrict {
     }
 
     private function MaintainTimer(): void {
-        $status = $this->GetValue('Status');
+        $statusId = @$this->GetIDForIdent('Status');
+        $status = $statusId ? $this->GetValue('Status') : 0;
         if ($status === 1 || $status === 2 || $status === 'Start' || $status === 'Aktiv') {
             $this->SetTimerInterval('DataCollectorTimer', self::MS_PER_MINUTE);
             $interval = $this->ReadPropertyInteger('AnalysisInterval');
