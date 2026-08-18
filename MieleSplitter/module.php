@@ -61,7 +61,7 @@ class MieleSplitter extends IPSModuleStrict
 
         if (empty($this->ReadPropertyString('ClientID')) || empty($this->ReadPropertyString('Username'))) {
             $this->SetStatus(104);
-            $this->SetValue('SSEStatus', 'Nicht konfiguriert');
+            $this->SetValueIfChanged('SSEStatus', 'Nicht konfiguriert');
 
             $this->SetTimerInterval('SM_TokenRefresh', 0);
             $this->DA_StopWatchdog();
@@ -77,10 +77,10 @@ class MieleSplitter extends IPSModuleStrict
         if ($token) {
             $this->UpdateSSEClientConfig($token);
             $this->SetStatus(102); // Active
-            $this->SetValue('SSEStatus', 'Verbunden');
+            $this->SetValueIfChanged('SSEStatus', 'Verbunden');
         } else {
             $this->SetStatus(200); // Auth failed
-            $this->SetValue('SSEStatus', 'Authentifizierung fehlgeschlagen');
+            $this->SetValueIfChanged('SSEStatus', 'Authentifizierung fehlgeschlagen');
             $this->DA_SetAvailable(false, 'Authentifizierung fehlgeschlagen');
         }
 
@@ -93,6 +93,12 @@ class MieleSplitter extends IPSModuleStrict
 
     public function ReceiveData(string $JSONString): string
     {
+        $hash = md5($JSONString);
+        if ($this->GetBuffer('LastPayloadHash') === $hash) {
+            return "OK";
+        }
+        $this->SetBuffer('LastPayloadHash', $hash);
+
         $data = json_decode($JSONString, true);
         if (!is_array($data) || ($data['DataID'] ?? '') !== '{5A709184-B602-D394-227F-207611A33BDF}') {
             return '';
@@ -124,7 +130,7 @@ class MieleSplitter extends IPSModuleStrict
                     $this->SetStatus(102);
                     $this->DA_SetAvailable(true);
                     $this->DA_ResetWatchdog(600);
-                    $this->SetValue('SSEStatus', 'Verbunden (letztes Update: ' . date('H:i:s') . ')');
+                    $this->SetValueIfChanged('SSEStatus', 'Verbunden (letztes Update: ' . date('H:i:s') . ')');
                 }
                 break;
 
@@ -356,7 +362,7 @@ class MieleSplitter extends IPSModuleStrict
                 
                 // Force SSE Reconnect
                 $this->UpdateSSEClientConfig($token, true);
-                $this->SetValue('SSEStatus', 'Watchdog Reconnect...');
+                $this->SetValueIfChanged('SSEStatus', 'Watchdog Reconnect...');
             }
             
             // Reset buffer so we don't reconnect every minute if Miele is completely offline
@@ -371,7 +377,7 @@ class MieleSplitter extends IPSModuleStrict
                 $this->SLog('INFO', 'OAuth2', 'Token erfolgreich erneuert');
             } else {
                 $this->SLog('ERROR', 'OAuth2', 'Token-Erneuerung fehlgeschlagen');
-                $this->SetValue('SSEStatus', 'Token-Erneuerung fehlgeschlagen');
+                $this->SetValueIfChanged('SSEStatus', 'Token-Erneuerung fehlgeschlagen');
             }
         }
     }
@@ -492,7 +498,7 @@ class MieleSplitter extends IPSModuleStrict
         $token = $this->GetToken();
         if ($token) {
             $this->UpdateSSEClientConfig($token, true);
-            $this->SetValue('SSEStatus', 'Reconnect...');
+            $this->SetValueIfChanged('SSEStatus', 'Reconnect...');
             echo "SSE-Verbindung wird neu aufgebaut.\n";
         } else {
             echo "Kein gültiger Token verfügbar.\n";
@@ -627,5 +633,15 @@ class MieleSplitter extends IPSModuleStrict
     ]
 }
 EOT;
+    }
+
+
+    protected function SetValueIfChanged(string $ident, mixed $value): bool
+    {
+        if ($this->GetValue($ident) !== $value) {
+            $this->SetValue($ident, $value);
+            return true;
+        }
+        return false;
     }
 }
