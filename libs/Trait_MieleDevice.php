@@ -4,6 +4,15 @@ declare(strict_types=1);
 
 trait MieleDevice_Trait
 {
+    protected function SetValueIfChanged(string $ident, mixed $value): bool
+    {
+        if ($this->GetValue($ident) !== $value) {
+            $this->SetValue($ident, $value);
+            return true;
+        }
+        return false;
+    }
+
     private function TranslateMieleText(string $text): string
     {
         $map = [
@@ -143,57 +152,57 @@ trait MieleDevice_Trait
                         $this->SLogInfo("Status geändert: " . $newStatus);
                     }
                 }
-                $this->SetValue('StatusText', $newStatus);
+                $this->SetValueIfChanged('StatusText', $newStatus);
             }
 
             if (isset($state['status']['value_raw'])) {
                 $statusRaw = (int)$state['status']['value_raw'];
                 // PowerOn: off (1) = false, anything else = true
                 if (@$this->GetIDForIdent('PowerOn') !== false) {
-                    $this->SetValue('PowerOn', $statusRaw !== 1);
+                    $this->SetValueIfChanged('PowerOn', $statusRaw !== 1);
                 }
             }
 
             // PowerSupply
             if (isset($state['powerSupply']['value_raw']) && @$this->GetIDForIdent('PowerSupply') !== false) {
-                $this->SetValue('PowerSupply', (int)$state['powerSupply']['value_raw']);
+                $this->SetValueIfChanged('PowerSupply', (int)$state['powerSupply']['value_raw']);
             }
             
             // Signals
             if (isset($state['signalInfo']) && @$this->GetIDForIdent('SignalInfo') !== false) {
-                $this->SetValue('SignalInfo', (bool)$state['signalInfo']);
+                $this->SetValueIfChanged('SignalInfo', (bool)$state['signalInfo']);
             }
             if (isset($state['signalFailure']) && @$this->GetIDForIdent('SignalFailure') !== false) {
-                $this->SetValue('SignalFailure', (bool)$state['signalFailure']);
+                $this->SetValueIfChanged('SignalFailure', (bool)$state['signalFailure']);
             }
             if (isset($state['signalDoor'])) {
                 if (@$this->GetIDForIdent('Door') !== false) {
-                    $this->SetValue('Door', (bool)$state['signalDoor']);
+                    $this->SetValueIfChanged('Door', (bool)$state['signalDoor']);
                 }
                 if (@$this->GetIDForIdent('DoorOpen') !== false) {
-                    $this->SetValue('DoorOpen', (bool)$state['signalDoor']);
+                    $this->SetValueIfChanged('DoorOpen', (bool)$state['signalDoor']);
                 }
             }
             
             // Program info
             if (isset($state['ProgramID']['value_localized']) && @$this->GetIDForIdent('ProgramName') !== false) {
-                $this->SetValue('ProgramName', $this->TranslateMieleText((string)$state['ProgramID']['value_localized']));
+                $this->SetValueIfChanged('ProgramName', $this->TranslateMieleText((string)$state['ProgramID']['value_localized']));
             }
             if (isset($state['programPhase']['value_localized']) && @$this->GetIDForIdent('ProgramPhaseText') !== false) {
-                $this->SetValue('ProgramPhaseText', $this->TranslateMieleText((string)$state['programPhase']['value_localized']));
+                $this->SetValueIfChanged('ProgramPhaseText', $this->TranslateMieleText((string)$state['programPhase']['value_localized']));
             }
 
             // Target Temperature
             if (isset($state['targetTemperature'][0]['value_raw'])) {
                 $t = $state['targetTemperature'][0]['value_raw'];
                 if (@$this->GetIDForIdent('TargetTemp1') !== false) { // Fridge
-                    $this->SetValue('TargetTemp1', (int)round($t / 100.0));
+                    $this->SetValueIfChanged('TargetTemp1', (int)round($t / 100.0));
                 }
                 if (@$this->GetIDForIdent('Temperature') !== false && $t > -100) { // Washer
                     if ($t >= 1000) {
-                        $this->SetValue('Temperature', (int)($t / 100));
+                        $this->SetValueIfChanged('Temperature', (int)($t / 100));
                     } else {
-                        $this->SetValue('Temperature', (int)$t);
+                        $this->SetValueIfChanged('Temperature', (int)$t);
                     }
                 }
             }
@@ -202,46 +211,46 @@ trait MieleDevice_Trait
             if (isset($state['temperature'][0]['value_raw'])) {
                 if (@$this->GetIDForIdent('Temp1') !== false) {
                     $valTemp = (int)round($state['temperature'][0]['value_raw'] / 100.0);
-                    $this->SetValue('Temp1', $valTemp);
+                    $this->SetValueIfChanged('Temp1', $valTemp);
                 }
             }
 
             // Spinning Speed
             if (isset($state['spinningSpeed']['value_raw']) && @$this->GetIDForIdent('SpinSpeed') !== false) {
                 $s = $state['spinningSpeed']['value_raw'];
-                if ($s > -1) $this->SetValue('SpinSpeed', (int)$s);
+                if ($s > -1) $this->SetValueIfChanged('SpinSpeed', (int)$s);
             }
             // Dryness Level
             if (isset($state['dryingStep']) && @$this->GetIDForIdent('DrynessLevel') !== false) {
                 $valLoc = (string)($state['dryingStep']['value_localized'] ?? '');
                 if (trim($valLoc) !== '') {
-                    $this->SetValue('DrynessLevel', $this->TranslateMieleText($valLoc));
+                    $this->SetValueIfChanged('DrynessLevel', $this->TranslateMieleText($valLoc));
                 } else if (isset($state['dryingStep']['value_raw']) && (int)$state['dryingStep']['value_raw'] > 0) {
-                    $this->SetValue('DrynessLevel', 'Stufe ' . (int)$state['dryingStep']['value_raw']);
+                    $this->SetValueIfChanged('DrynessLevel', 'Stufe ' . (int)$state['dryingStep']['value_raw']);
                 } else {
-                    $this->SetValue('DrynessLevel', '-');
+                    $this->SetValueIfChanged('DrynessLevel', '-');
                 }
             }
 
             // Eco Feedback
             if (isset($state['ecoFeedback']['currentWaterConsumption']['value']) && @$this->GetIDForIdent('CurrentWaterConsumption') !== false) {
                 $water = (float)$state['ecoFeedback']['currentWaterConsumption']['value'];
-                $this->SetValue('CurrentWaterConsumption', $water);
+                $this->SetValueIfChanged('CurrentWaterConsumption', $water);
                 if ($water > 0 && @$this->GetIDForIdent('LastWaterConsumption') !== false) {
                     if (method_exists($this, 'WriteAttributeFloat')) $this->WriteAttributeFloat('LastWater', $water);
-                    $this->SetValue('LastWaterConsumption', $water);
+                    $this->SetValueIfChanged('LastWaterConsumption', $water);
                 } else if (@$this->GetIDForIdent('LastWaterConsumption') !== false) {
-                    if (method_exists($this, 'ReadAttributeFloat')) $this->SetValue('LastWaterConsumption', $this->ReadAttributeFloat('LastWater'));
+                    if (method_exists($this, 'ReadAttributeFloat')) $this->SetValueIfChanged('LastWaterConsumption', $this->ReadAttributeFloat('LastWater'));
                 }
             }
             if (isset($state['ecoFeedback']['currentEnergyConsumption']['value']) && @$this->GetIDForIdent('CurrentEnergyConsumption') !== false) {
                 $energy = (float)$state['ecoFeedback']['currentEnergyConsumption']['value'];
-                $this->SetValue('CurrentEnergyConsumption', $energy);
+                $this->SetValueIfChanged('CurrentEnergyConsumption', $energy);
                 if ($energy > 0 && @$this->GetIDForIdent('LastEnergyConsumption') !== false) {
                     if (method_exists($this, 'WriteAttributeFloat')) $this->WriteAttributeFloat('LastEnergy', $energy);
-                    $this->SetValue('LastEnergyConsumption', $energy);
+                    $this->SetValueIfChanged('LastEnergyConsumption', $energy);
                 } else if (@$this->GetIDForIdent('LastEnergyConsumption') !== false) {
-                    if (method_exists($this, 'ReadAttributeFloat')) $this->SetValue('LastEnergyConsumption', $this->ReadAttributeFloat('LastEnergy'));
+                    if (method_exists($this, 'ReadAttributeFloat')) $this->SetValueIfChanged('LastEnergyConsumption', $this->ReadAttributeFloat('LastEnergy'));
                 }
             }
 
@@ -321,10 +330,10 @@ trait MieleDevice_Trait
                     }
                 }
 
-                if (@$this->GetIDForIdent('ElapsedTime') !== false) $this->SetValue('ElapsedTime', (int)$elapsedMinutes);
-                if (@$this->GetIDForIdent('RemainingTime') !== false) $this->SetValue('RemainingTime', (int)$remMinutes);
-                if (@$this->GetIDForIdent('RemainingTimeSeconds') !== false) $this->SetValue('RemainingTimeSeconds', (int)($remMinutes * 60));
-                if (@$this->GetIDForIdent('ProgressPct') !== false) $this->SetValue('ProgressPct', (int)$progress);
+                if (@$this->GetIDForIdent('ElapsedTime') !== false) $this->SetValueIfChanged('ElapsedTime', (int)$elapsedMinutes);
+                if (@$this->GetIDForIdent('RemainingTime') !== false) $this->SetValueIfChanged('RemainingTime', (int)$remMinutes);
+                if (@$this->GetIDForIdent('RemainingTimeSeconds') !== false) $this->SetValueIfChanged('RemainingTimeSeconds', (int)($remMinutes * 60));
+                if (@$this->GetIDForIdent('ProgressPct') !== false) $this->SetValueIfChanged('ProgressPct', (int)$progress);
                 
                 // StartTime String
                 if (@$this->GetIDForIdent('StartTime') !== false) {
@@ -332,20 +341,20 @@ trait MieleDevice_Trait
                         // Running or Finished -> actual start time
                         $anchor = @$this->ReadAttributeInteger('AnchorStartTime') ?: 0;
                         if ($anchor > 0) {
-                            $this->SetValue('StartTime', date('H:i', $anchor));
+                            $this->SetValueIfChanged('StartTime', date('H:i', $anchor));
                         } else {
-                            $this->SetValue('StartTime', '-');
+                            $this->SetValueIfChanged('StartTime', '-');
                         }
                     } else if ($statusRaw == 4 && isset($state['startTime']) && is_array($state['startTime']) && count($state['startTime']) == 2) {
                         // Waiting to start -> Delay Start from API
                         $delayMinutes = ($state['startTime'][0] * 60) + $state['startTime'][1];
                         if ($delayMinutes > 0) {
-                            $this->SetValue('StartTime', date('H:i', time() + ($delayMinutes * 60)));
+                            $this->SetValueIfChanged('StartTime', date('H:i', time() + ($delayMinutes * 60)));
                         } else {
-                            $this->SetValue('StartTime', '-');
+                            $this->SetValueIfChanged('StartTime', '-');
                         }
                     } else {
-                        $this->SetValue('StartTime', '-');
+                        $this->SetValueIfChanged('StartTime', '-');
                     }
                 }
                 
@@ -353,9 +362,9 @@ trait MieleDevice_Trait
                 if (@$this->GetIDForIdent('FinishTime') !== false) {
                     if (($statusRaw == 5 || $statusRaw == 4) && $remMinutes > 0) { // Running or Waiting
                         $finishTime = time() + ($remMinutes * 60);
-                        $this->SetValue('FinishTime', date('H:i', $finishTime));
+                        $this->SetValueIfChanged('FinishTime', date('H:i', $finishTime));
                     } else {
-                        $this->SetValue('FinishTime', '-');
+                        $this->SetValueIfChanged('FinishTime', '-');
                     }
                 }
             }

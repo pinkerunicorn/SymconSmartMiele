@@ -309,12 +309,12 @@ class MieleWasher extends IPSModuleStrict
             if ($val1 === null || $val1 === '') {
                 $cached = $this->ReadAttributeInteger('LastTwinDos1');
                 if ($cached > 0) {
-                    $this->SetValue('TwinDos1', $cached);
+                    $this->SetValueIfChanged('TwinDos1', $cached);
                 }
             } else {
                 $val1 = (int)$val1;
                 $this->WriteAttributeInteger('LastTwinDos1', $val1);
-                $this->SetValue('TwinDos1', $val1);
+                $this->SetValueIfChanged('TwinDos1', $val1);
             }
 
             $val2 = null;
@@ -324,12 +324,12 @@ class MieleWasher extends IPSModuleStrict
             if ($val2 === null || $val2 === '') {
                 $cached = $this->ReadAttributeInteger('LastTwinDos2');
                 if ($cached > 0) {
-                    $this->SetValue('TwinDos2', $cached);
+                    $this->SetValueIfChanged('TwinDos2', $cached);
                 }
             } else {
                 $val2 = (int)$val2;
                 $this->WriteAttributeInteger('LastTwinDos2', $val2);
-                $this->SetValue('TwinDos2', $val2);
+                $this->SetValueIfChanged('TwinDos2', $val2);
             }
         }
     }
@@ -349,13 +349,13 @@ class MieleWasher extends IPSModuleStrict
                 } else {
                     $this->Miele_SendAction(['powerOff' => true]);
                 }
-                $this->SetValue('PowerOn', (bool)$Value);
+                $this->SetValueIfChanged('PowerOn', (bool)$Value);
                 break;
             case 'ProcessAction':
                 if ($Value > 0) {
                     $this->Miele_SendAction(['processAction' => (int)$Value]);
                 }
-                $this->SetValue('ProcessAction', (int)$Value);
+                $this->SetValueIfChanged('ProcessAction', (int)$Value);
                 break;
         }
     }

@@ -81,7 +81,7 @@ if (!trait_exists('DeviceAvailability_Trait')) {
 
             // Set initial state to true (Online) on creation so newly created variables don't falsely trigger offline alarms
             if ($this->GetValue('DeviceAvailable') === false && time() - IPS_GetVariable($this->GetIDForIdent('DeviceAvailable'))['VariableUpdated'] > 31536000) {
-                $this->SetValue('DeviceAvailable', true);
+                $this->SetValueIfChanged('DeviceAvailable', true);
             }
         }
 
@@ -113,7 +113,7 @@ if (!trait_exists('DeviceAvailability_Trait')) {
                 return;
             }
 
-            $this->SetValue('DeviceAvailable', $available);
+            $this->SetValueIfChanged('DeviceAvailable', $available);
 
             $instanceName = IPS_GetName($this->InstanceID);
 

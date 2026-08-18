@@ -211,17 +211,17 @@ class ImperialDishwasherAI extends IPSModuleStrict {
     public function RequestAction(string $Ident, mixed $Value): void {
         if ($Ident === 'Status') {
             if ($Value === 0 || $Value === 'Aus') {
-                $this->SetValue('Status', 0);
-                $this->SetValue('CurrentPhase', 'Aus');
-                $this->SetValue('RemainingTime', 0);
-                $this->SetValue('RemainingTimeMinutes', 0);
-                $this->SetValue('ExpectedEnd', 0);
-                $this->SetValue('Progress', 0);
-                $this->SetValue('SessionData', '[]');
-                $this->SetValue('VestaboardMessage', '');
+                $this->SetValueIfChanged('Status', 0);
+                $this->SetValueIfChanged('CurrentPhase', 'Aus');
+                $this->SetValueIfChanged('RemainingTime', 0);
+                $this->SetValueIfChanged('RemainingTimeMinutes', 0);
+                $this->SetValueIfChanged('ExpectedEnd', 0);
+                $this->SetValueIfChanged('Progress', 0);
+                $this->SetValueIfChanged('SessionData', '[]');
+                $this->SetValueIfChanged('VestaboardMessage', '');
                 $this->MaintainTimer();
             } else {
-                $this->SetValue('Status', (int)$Value);
+                $this->SetValueIfChanged('Status', (int)$Value);
                 $this->MaintainTimer();
             }
         }
@@ -236,15 +236,15 @@ class ImperialDishwasherAI extends IPSModuleStrict {
                 $threshold = $this->ReadPropertyFloat('StartThreshold');
 
                 if ($power > $threshold && ($status === 0 || $status === '' || $status === 3)) {
-                    $this->SetValue('Status', 1);
-                    $this->SetValue('VestaboardMessage', 'Spülmaschine gestartetâ€¦');
-                    $this->SetValue('ActiveSince', time());
-                    $this->SetValue('CurrentPhase', 'Gestartet');
-                    $this->SetValue('RemainingTime', 0);
-                    $this->SetValue('RemainingTimeMinutes', 0);
-                    $this->SetValue('ExpectedEnd', 0);
-                    $this->SetValue('Progress', 0);
-                    $this->SetValue('SessionData', '[]');
+                    $this->SetValueIfChanged('Status', 1);
+                    $this->SetValueIfChanged('VestaboardMessage', 'Spülmaschine gestartetâ€¦');
+                    $this->SetValueIfChanged('ActiveSince', time());
+                    $this->SetValueIfChanged('CurrentPhase', 'Gestartet');
+                    $this->SetValueIfChanged('RemainingTime', 0);
+                    $this->SetValueIfChanged('RemainingTimeMinutes', 0);
+                    $this->SetValueIfChanged('ExpectedEnd', 0);
+                    $this->SetValueIfChanged('Progress', 0);
+                    $this->SetValueIfChanged('SessionData', '[]');
                     $this->SLog('INFO', 'Spülmaschine hat gestartet.');
                     $this->MaintainTimer();
                 }
@@ -276,7 +276,7 @@ class ImperialDishwasherAI extends IPSModuleStrict {
         if (!is_array($sessionData)) $sessionData = [];
 
         $sessionData[] = $power;
-        $this->SetValue('SessionData', json_encode($sessionData));
+        $this->SetValueIfChanged('SessionData', json_encode($sessionData));
     }
 
     public function AnalyzeData(): void {
@@ -332,7 +332,7 @@ class ImperialDishwasherAI extends IPSModuleStrict {
             'required' => ['phase', 'isFinished', 'remainingMinutes']
         ]);
 
-        $this->SetValue('LastGeminiPrompt', $userPrompt);
+        $this->SetValueIfChanged('LastGeminiPrompt', $userPrompt);
 
         $instanceId = $this->InstanceID;
 
@@ -356,7 +356,7 @@ class ImperialDishwasherAI extends IPSModuleStrict {
      * @param string $jsonText Bereits extrahierter JSON-Text von GIO_Query
      */
     public function ProcessGeminiResult(string $jsonText): void {
-        $this->SetValue('LastGeminiResponse', $jsonText);
+        $this->SetValueIfChanged('LastGeminiResponse', $jsonText);
 
         if (empty($jsonText)) {
             $this->SLog('ERROR', 'Gemini-Analyse fehlgeschlagen (leere Antwort von SmartGeminiIO).');
@@ -369,47 +369,47 @@ class ImperialDishwasherAI extends IPSModuleStrict {
             return;
         }
 
-        $this->SetValue('CurrentPhase', $parsed['phase']);
+        $this->SetValueIfChanged('CurrentPhase', $parsed['phase']);
 
         if (isset($parsed['remainingMinutes'])) {
             $remMin = (int)$parsed['remainingMinutes'];
             $remSec = $remMin * 60;
-            $this->SetValue('RemainingTime', $remSec);
-            $this->SetValue('RemainingTimeMinutes', $remMin);
+            $this->SetValueIfChanged('RemainingTime', $remSec);
+            $this->SetValueIfChanged('RemainingTimeMinutes', $remMin);
 
             // Vestaboard: Kurz-Status mit Restzeit
             if ($remMin > 0) {
-                $this->SetValue('VestaboardMessage', 'Spülmaschine: ' . $parsed['phase'] . ' (~' . $remMin . ' min)');
+                $this->SetValueIfChanged('VestaboardMessage', 'Spülmaschine: ' . $parsed['phase'] . ' (~' . $remMin . ' min)');
             }
 
             if ($remSec > 0) {
                 $expectedEnd = time() + $remSec;
-                $this->SetValue('ExpectedEnd', $expectedEnd);
+                $this->SetValueIfChanged('ExpectedEnd', $expectedEnd);
 
                 $activeSince = $this->GetValue('ActiveSince');
                 $total       = $expectedEnd - $activeSince;
                 if ($total > 0) {
                     $progress = (int)(((time() - $activeSince) / $total) * 100);
-                    $this->SetValue('Progress', min(100, max(0, $progress)));
+                    $this->SetValueIfChanged('Progress', min(100, max(0, $progress)));
                 }
             } else {
-                $this->SetValue('Progress', 100);
-                $this->SetValue('ExpectedEnd', time());
+                $this->SetValueIfChanged('Progress', 100);
+                $this->SetValueIfChanged('ExpectedEnd', time());
             }
         }
 
         if (isset($parsed['isFinished']) && $parsed['isFinished'] == true) {
-            $this->SetValue('Status', 3);
-            $this->SetValue('Progress', 0);
-            $this->SetValue('VestaboardMessage', 'Spülmaschine fertig! Bitte ausräumen.');
+            $this->SetValueIfChanged('Status', 3);
+            $this->SetValueIfChanged('Progress', 0);
+            $this->SetValueIfChanged('VestaboardMessage', 'Spülmaschine fertig! Bitte ausräumen.');
 
             // Komplette Kurve für nächsten Durchlauf speichern
-            $this->SetValue('LastSessionData', $this->GetValue('SessionData'));
+            $this->SetValueIfChanged('LastSessionData', $this->GetValue('SessionData'));
             $this->MaintainTimer();
             $this->SLog('INFO', 'Gemini meldet: Spülmaschine ist fertig.');
         } else {
             if ($this->GetValue('Status') === 1) {
-                $this->SetValue('Status', 2);
+                $this->SetValueIfChanged('Status', 2);
                 $this->MaintainTimer();
             }
             $this->SLog('INFO', 'Gemini Phase: ' . $parsed['phase']);

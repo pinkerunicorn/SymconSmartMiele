@@ -115,7 +115,7 @@ if (!trait_exists('CentralStateAware_Trait')) {
                         IPS_SetIcon($this->GetIDForIdent($mirrorIdent), IPS_GetObject($varID)['ObjectIcon']);
                         
                         // Setze den initialen Wert
-                        $this->SetValue($mirrorIdent, $value);
+                        $this->SetValueIfChanged($mirrorIdent, $value);
                     } else {
                         // Lösche den Mirror, falls vorhanden
                         $mirrorID = @$this->GetIDForIdent($mirrorIdent);
@@ -149,7 +149,7 @@ if (!trait_exists('CentralStateAware_Trait')) {
                         
                         $this->SetBuffer('CSA_' . $ident, serialize($newValue));
                         if (@$this->GetIDForIdent('CSA_State_' . $ident) !== false) {
-                            $this->SetValue('CSA_State_' . $ident, $newValue);
+                            $this->SetValueIfChanged('CSA_State_' . $ident, $newValue);
                         }
                         $this->OnCentralStateChanged($ident, $newValue);
                         return true;

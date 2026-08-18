@@ -183,19 +183,19 @@ class MieleHood extends IPSModuleStrict
     protected function Miele_ProcessCustomDeviceData(array $state): void
     {
         if (isset($state['light'])) {
-            $this->SetValue('Light', (bool)($state['light'] == 1));
+            $this->SetValueIfChanged('Light', (bool)($state['light'] == 1));
         }
         if (isset($state['ambientLight'])) {
-            $this->SetValue('AmbientLight', (bool)($state['ambientLight'] == 1));
+            $this->SetValueIfChanged('AmbientLight', (bool)($state['ambientLight'] == 1));
         }
         if (isset($state['ventilationStep']['value_raw'])) {
-            $this->SetValue('VentilationStep', (int)$state['ventilationStep']['value_raw']);
+            $this->SetValueIfChanged('VentilationStep', (int)$state['ventilationStep']['value_raw']);
         }
         if (isset($state['greaseFilterSaturation'])) {
-            $this->SetValue('GreaseFilterSaturation', (int)$state['greaseFilterSaturation']);
+            $this->SetValueIfChanged('GreaseFilterSaturation', (int)$state['greaseFilterSaturation']);
         }
         if (isset($state['carbonFilterSaturation'])) {
-            $this->SetValue('CarbonFilterSaturation', (int)$state['carbonFilterSaturation']);
+            $this->SetValueIfChanged('CarbonFilterSaturation', (int)$state['carbonFilterSaturation']);
         }
     }
 
@@ -260,7 +260,7 @@ class MieleHood extends IPSModuleStrict
         }
 
         if ($this->Miele_SendAction($actionData)) {
-            $this->SetValue('PowerOn', $turnOn);
+            $this->SetValueIfChanged('PowerOn', $turnOn);
         }
     }
 
@@ -282,12 +282,12 @@ class MieleHood extends IPSModuleStrict
                 $this->SLogInfo('Fehler: Haube konnte nicht eingeschaltet werden');
                 return;
             }
-            $this->SetValue('PowerOn', true);
+            $this->SetValueIfChanged('PowerOn', true);
         }
 
         // Now send the light command (Miele API: 1=On, 2=Off)
         if ($this->Miele_SendAction(['light' => $turnOn ? 1 : 2])) {
-            $this->SetValue('Light', $turnOn);
+            $this->SetValueIfChanged('Light', $turnOn);
         }
     }
 
@@ -308,11 +308,11 @@ class MieleHood extends IPSModuleStrict
                 $this->SLogInfo('Fehler: Haube konnte nicht eingeschaltet werden');
                 return;
             }
-            $this->SetValue('PowerOn', true);
+            $this->SetValueIfChanged('PowerOn', true);
         }
 
         if ($this->Miele_SendAction(['ambientLight' => $turnOn ? 1 : 2])) {
-            $this->SetValue('AmbientLight', $turnOn);
+            $this->SetValueIfChanged('AmbientLight', $turnOn);
         }
     }
 
@@ -324,7 +324,7 @@ class MieleHood extends IPSModuleStrict
         $this->SLogInfo('Setze Lüfterstufe: ' . $step);
 
         if ($this->Miele_SendAction(['ventilationStep' => $step])) {
-            $this->SetValue('VentilationStep', $step);
+            $this->SetValueIfChanged('VentilationStep', $step);
         }
     }
 

@@ -125,7 +125,7 @@ class MieleHob extends IPSModuleStrict
             $plates = $this->ReadPropertyInteger('PlateCount');
             for ($i = 0; $i < $plates; $i++) {
                 if (isset($state['plateStep'][$i]['value_localized'])) {
-                    $this->SetValue('Plate'. ($i + 1), (string)$state['plateStep'][$i]['value_localized']);
+                    $this->SetValueIfChanged('Plate'. ($i + 1), (string)$state['plateStep'][$i]['value_localized']);
                 }
             }
 
@@ -139,7 +139,7 @@ class MieleHob extends IPSModuleStrict
                     } else {
                         $mapped = $stepMap[$raw] ?? (string)$raw;
                     }
-                    $this->SetValue('PlateStep' . $zoneNum, $mapped);
+                    $this->SetValueIfChanged('PlateStep' . $zoneNum, $mapped);
                 }
             }
 
@@ -147,8 +147,8 @@ class MieleHob extends IPSModuleStrict
             foreach ($state['plateStep'] as $step) {
                 if (isset($step['value_raw']) && (int)$step['value_raw'] > 0) $activeCount++;
             }
-            $this->SetValue('IsActive', $activeCount > 0);
-            $this->SetValue('ActiveZoneCount', $activeCount);
+            $this->SetValueIfChanged('IsActive', $activeCount > 0);
+            $this->SetValueIfChanged('ActiveZoneCount', $activeCount);
         }
     }
 

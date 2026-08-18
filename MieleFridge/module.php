@@ -138,9 +138,9 @@ class MieleFridge extends IPSModuleStrict
                 }
             }
 
-            $this->SetValue('SuperCooling', $isSuperCooling);
+            $this->SetValueIfChanged('SuperCooling', $isSuperCooling);
             if ($this->ReadPropertyBoolean('EnableSuperFreezing')) {
-                $this->SetValue('SuperFreezing', $isSuperFreezing);
+                $this->SetValueIfChanged('SuperFreezing', $isSuperFreezing);
             }
         }
     }
@@ -180,7 +180,7 @@ class MieleFridge extends IPSModuleStrict
             $success = $this->Miele_SendAction($actionData);
 
             if ($success) {
-                $this->SetValue($Ident, $Value);
+                $this->SetValue($ident, $value);
             }
         }
     }

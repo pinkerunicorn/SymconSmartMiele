@@ -222,7 +222,7 @@ class MieleDryer extends IPSModuleStrict
             case 'PowerOn':
                 $action = $Value ? 'powerOn' : 'powerOff';
                 $this->Miele_SendAction([$action => true]);
-                $this->SetValue($Ident, $Value);
+                $this->SetValue($ident, $value);
                 break;
             case 'ProcessAction':
                 if ($Value == 1) {
@@ -232,7 +232,7 @@ class MieleDryer extends IPSModuleStrict
                 } elseif ($Value == 3) {
                     $this->Miele_SendAction(['processAction' => 3]);
                 }
-                $this->SetValue($Ident, 0);
+                $this->SetValueIfChanged($Ident, 0);
                 break;
         }
     }
