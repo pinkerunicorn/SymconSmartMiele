@@ -157,15 +157,53 @@ class MieleWasher extends IPSModuleStrict
             ])
         ], 33);
         
+        $twinDosIntervals = json_encode([
+            [
+                'IntervalMinValue' => 0, 'IntervalMaxValue' => 0,
+                'ConstantActive' => true, 'ConstantValue' => 'Leer!',
+                'ConversionFactor' => 1,
+                'PrefixActive' => false, 'PrefixValue' => '',
+                'SuffixActive' => false, 'SuffixValue' => '',
+                'DigitsActive' => false, 'DigitsValue' => 0,
+                'IconActive' => true, 'IconValue' => 'triangle-exclamation',
+                'ColorActive' => true, 'ColorValue' => 0xFF0000,
+                'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF
+            ],
+            [
+                'IntervalMinValue' => 1, 'IntervalMaxValue' => 15,
+                'ConstantActive' => false, 'ConstantValue' => '',
+                'ConversionFactor' => 1,
+                'PrefixActive' => false, 'PrefixValue' => '',
+                'SuffixActive' => true, 'SuffixValue' => ' %',
+                'DigitsActive' => false, 'DigitsValue' => 0,
+                'IconActive' => true, 'IconValue' => 'bottle-droplet',
+                'ColorActive' => true, 'ColorValue' => 0xFFA500,
+                'ContentColorActive' => false, 'ContentColorValue' => -1
+            ],
+            [
+                'IntervalMinValue' => 16, 'IntervalMaxValue' => 100,
+                'ConstantActive' => false, 'ConstantValue' => '',
+                'ConversionFactor' => 1,
+                'PrefixActive' => false, 'PrefixValue' => '',
+                'SuffixActive' => true, 'SuffixValue' => ' %',
+                'DigitsActive' => false, 'DigitsValue' => 0,
+                'IconActive' => true, 'IconValue' => 'bottle-droplet',
+                'ColorActive' => true, 'ColorValue' => 0x00CC00,
+                'ContentColorActive' => false, 'ContentColorValue' => -1
+            ]
+        ]);
+
         $this->RegisterVariableInteger('TwinDos1', 'TwinDos 1 Füllstand', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'SUFFIX' => '%',
-            'ICON' => 'bottle-droplet'
+            'ICON' => 'bottle-droplet',
+            'INTERVALS_ACTIVE' => true,
+            'INTERVALS' => $twinDosIntervals
         ], 40);
         $this->RegisterVariableInteger('TwinDos2', 'TwinDos 2 Füllstand', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'SUFFIX' => '%',
-            'ICON' => 'bottle-droplet'
+            'ICON' => 'bottle-droplet',
+            'INTERVALS_ACTIVE' => true,
+            'INTERVALS' => $twinDosIntervals
         ], 45);
         
         $this->RegisterVariableFloat('CurrentWaterConsumption', 'aktueller Wasserverbrauch', [
