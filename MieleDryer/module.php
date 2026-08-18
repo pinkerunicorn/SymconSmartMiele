@@ -159,12 +159,17 @@ class MieleDryer extends IPSModuleStrict
             'SUFFIX' => 'kWh',
             'ICON' => 'bolt'
         ], 60);
+        $this->DR_Register('DevicesGenericSensor');
+    }
+
+    public function Destroy(): void {
+        parent::Destroy();
+        $this->DR_Unregister();
     }
 
     public function ApplyChanges(): void{
         parent::ApplyChanges();
         $this->DA_ApplyPresentation();
-        $this->DR_Register('DevicesGenericSensor');
 
         $this->RegisterVariableBoolean('Door', 'Tür', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,

@@ -2,12 +2,15 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/../libs/Trait_DeviceRegistration.php';
+
 require_once __DIR__ . '/../libs/Trait_SmartLog.php';
 /**
  * ImperialDishwasherAI â€” KI-gestützte Spülmaschinen-Ãœberwachung.
  * Nutzt SmartGeminiIO für alle Gemini-API-Aufrufe.
  */
 class ImperialDishwasherAI extends IPSModuleStrict {
+    use DeviceRegistration_Trait;
     use SmartLog_Trait;
     /** GUID des SmartGeminiIO-Moduls zur Auto-Discovery */
     private const GEMINI_IO_GUID = '{4C8B2A6D-9E3F-4A7B-8C5D-1F6E2A3B7C4D}';
@@ -116,6 +119,12 @@ class ImperialDishwasherAI extends IPSModuleStrict {
 
         // Vestaboard: Kurzzusammenfassung für VestaboardGenerator
         $this->RegisterVariableString('VestaboardMessage', 'Vestaboard Nachricht', ['PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION, 'ICON' => 'file-code'], 101);
+        $this->DR_Register('DevicesGenericSensor');
+    }
+
+    public function Destroy(): void {
+        parent::Destroy();
+        $this->DR_Unregister();
     }
 
     public function ApplyChanges(): void {
