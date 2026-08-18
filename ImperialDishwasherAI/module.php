@@ -24,10 +24,6 @@ class ImperialDishwasherAI extends IPSModuleStrict {
         $this->RegisterPropertyFloat('StartThreshold', 100.0);
 
         // Variablen
-        $vid = @$this->GetIDForIdent('Status');
-        if ($vid && IPS_GetVariable($vid)['VariableType'] !== 3) {
-            $this->UnregisterVariable('Status');
-        }
         $statusIntervals = json_encode([
             [
                 'IntervalMinValue' => 0, 'IntervalMaxValue' => 0,
