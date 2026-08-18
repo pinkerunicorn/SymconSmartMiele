@@ -30,7 +30,7 @@ class ImperialDishwasherAI extends IPSModuleStrict {
         }
         $statusIntervals = json_encode([
             [
-                'IntervalMinValue' => 0, 'IntervalMaxValue' => 1,
+                'IntervalMinValue' => 0, 'IntervalMaxValue' => 0,
                 'ConstantActive' => true, 'ConstantValue' => 'Aus',
                 'ConversionFactor' => 1,
                 'PrefixActive' => false, 'PrefixValue' => '',
@@ -41,7 +41,7 @@ class ImperialDishwasherAI extends IPSModuleStrict {
                 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF
             ],
             [
-                'IntervalMinValue' => 1, 'IntervalMaxValue' => 2,
+                'IntervalMinValue' => 1, 'IntervalMaxValue' => 1,
                 'ConstantActive' => true, 'ConstantValue' => 'Start',
                 'ConversionFactor' => 1,
                 'PrefixActive' => false, 'PrefixValue' => '',
@@ -52,7 +52,7 @@ class ImperialDishwasherAI extends IPSModuleStrict {
                 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF
             ],
             [
-                'IntervalMinValue' => 2, 'IntervalMaxValue' => 3,
+                'IntervalMinValue' => 2, 'IntervalMaxValue' => 2,
                 'ConstantActive' => true, 'ConstantValue' => 'Aktiv',
                 'ConversionFactor' => 1,
                 'PrefixActive' => false, 'PrefixValue' => '',
@@ -63,7 +63,7 @@ class ImperialDishwasherAI extends IPSModuleStrict {
                 'ContentColorActive' => true, 'ContentColorValue' => 0xFFFFFF
             ],
             [
-                'IntervalMinValue' => 3, 'IntervalMaxValue' => 4,
+                'IntervalMinValue' => 3, 'IntervalMaxValue' => 3,
                 'ConstantActive' => true, 'ConstantValue' => 'Fertig',
                 'ConversionFactor' => 1,
                 'PrefixActive' => false, 'PrefixValue' => '',
