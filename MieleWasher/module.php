@@ -234,6 +234,7 @@ class MieleWasher extends IPSModuleStrict
     public function ApplyChanges(): void{
         parent::ApplyChanges();
         $this->DA_ApplyPresentation();
+        $this->DR_Register('DevicesGenericSensor');
 
         $this->RegisterVariableBoolean('Door', 'Tür', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
@@ -275,9 +276,6 @@ class MieleWasher extends IPSModuleStrict
 
 
     
-        $this->DR_Register('DevicesGenericSensor', [
-            'Reachable_VarID' => $this->GetIDForIdent('DeviceAvailable'),
-        ]);
     }
 
     public function Miele_OnDeviceUpdate(string $deviceId): void

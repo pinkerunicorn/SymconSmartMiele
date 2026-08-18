@@ -119,6 +119,7 @@ class MieleHood extends IPSModuleStrict
     {
         parent::ApplyChanges();
         $this->DA_ApplyPresentation();
+        $this->DR_Register('DevicesGenericSensor');
 
         if (empty($this->ReadPropertyString('DeviceID'))) {
             $this->SetStatus(104);
@@ -153,9 +154,6 @@ class MieleHood extends IPSModuleStrict
         $this->EnableAction('VentilationStep');
 
     
-        $this->DR_Register('DevicesGenericSensor', [
-            'Reachable_VarID' => $this->GetIDForIdent('DeviceAvailable'),
-        ]);
     }
 
     //==========================================================================

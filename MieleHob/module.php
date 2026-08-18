@@ -78,6 +78,7 @@ class MieleHob extends IPSModuleStrict
     public function ApplyChanges(): void{
         parent::ApplyChanges();
         $this->DA_ApplyPresentation();
+        $this->DR_Register('DevicesGenericSensor');
 
         if (empty($this->ReadPropertyString('DeviceID'))) {
             $this->SetStatus(104);
@@ -111,9 +112,6 @@ class MieleHob extends IPSModuleStrict
         }
 
     
-        $this->DR_Register('DevicesGenericSensor', [
-            'Reachable_VarID' => $this->GetIDForIdent('DeviceAvailable'),
-        ]);
     }
 
     protected function Miele_ProcessCustomDeviceData(array $state): void
