@@ -98,11 +98,9 @@ class ImperialDishwasherAI extends IPSModuleStrict {
             'ICON'         => 'calendar-days'
         ], 7);
         $this->RegisterVariableInteger('Progress', 'Fortschritt', [
-            'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON'         => 'bars-progress',
-            'SUFFIX'       => '%',
-            'MIN'          => 0,
-            'MAX'          => 100
+            'SUFFIX'       => '%'
         ], 8);
 
         // Timer
