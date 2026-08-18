@@ -91,7 +91,12 @@ class ImperialDishwasherAI extends IPSModuleStrict {
         $this->RegisterVariableInteger('RemainingTime', 'Restlaufzeit', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON'         => 'hourglass-half',
-            'SUFFIX'       => ' Min'
+            'SUFFIX'       => ' Sek'
+        ], 6);
+        $this->RegisterVariableInteger('RemainingTimeMinutes', 'Restlaufzeit (Minuten)', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON'         => 'hourglass-half',
+            'SUFFIX'       => ' min'
         ], 6);
         $this->RegisterVariableInteger('ExpectedEnd', 'Erwartetes Ende', [
             'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
@@ -204,6 +209,7 @@ class ImperialDishwasherAI extends IPSModuleStrict {
                 $this->SetValue('Status', 0);
                 $this->SetValue('CurrentPhase', 'Aus');
                 $this->SetValue('RemainingTime', 0);
+                $this->SetValue('RemainingTimeMinutes', 0);
                 $this->SetValue('ExpectedEnd', 0);
                 $this->SetValue('Progress', 0);
                 $this->SetValue('SessionData', '[]');
@@ -230,6 +236,7 @@ class ImperialDishwasherAI extends IPSModuleStrict {
                     $this->SetValue('ActiveSince', time());
                     $this->SetValue('CurrentPhase', 'Gestartet');
                     $this->SetValue('RemainingTime', 0);
+                    $this->SetValue('RemainingTimeMinutes', 0);
                     $this->SetValue('ExpectedEnd', 0);
                     $this->SetValue('Progress', 0);
                     $this->SetValue('SessionData', '[]');
@@ -362,7 +369,8 @@ class ImperialDishwasherAI extends IPSModuleStrict {
         if (isset($parsed['remainingMinutes'])) {
             $remMin = (int)$parsed['remainingMinutes'];
             $remSec = $remMin * 60;
-            $this->SetValue('RemainingTime', $remMin);
+            $this->SetValue('RemainingTime', $remSec);
+            $this->SetValue('RemainingTimeMinutes', $remMin);
 
             // Vestaboard: Kurz-Status mit Restzeit
             if ($remMin > 0) {
