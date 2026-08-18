@@ -395,6 +395,10 @@ class ImperialDishwasherAI extends IPSModuleStrict {
             $this->MaintainTimer();
             $this->SLog('INFO', 'Gemini meldet: Spülmaschine ist fertig.');
         } else {
+            if ($this->GetValue('Status') === 1) {
+                $this->SetValue('Status', 2);
+                $this->MaintainTimer();
+            }
             $this->SLog('INFO', 'Gemini Phase: ' . $parsed['phase']);
         }
     }
