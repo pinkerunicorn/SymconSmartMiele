@@ -5,9 +5,11 @@ declare(strict_types=1);
 require_once __DIR__ . '/../libs/Trait_SmartLog.php';
 require_once __DIR__ . '/../libs/Trait_DeviceAvailability.php';
 require_once __DIR__ . '/../libs/Trait_MieleDevice.php';
+require_once __DIR__ . '/../libs/Trait_DeviceRegistration.php';
 
 class MieleHob extends IPSModuleStrict
 {
+    use DeviceRegistration_Trait;
     use SmartLog_Trait;
     use DeviceAvailability_Trait;
     use MieleDevice_Trait;
@@ -108,6 +110,10 @@ class MieleHob extends IPSModuleStrict
             ], 24 + $i);
         }
 
+    
+        $this->DR_Register('DevicesGenericSensor', [
+            'Reachable_VarID' => $this->GetIDForIdent('DeviceAvailable'),
+        ]);
     }
 
     protected function Miele_ProcessCustomDeviceData(array $state): void

@@ -5,9 +5,11 @@ declare(strict_types=1);
 require_once __DIR__ . '/../libs/Trait_SmartLog.php';
 require_once __DIR__ . '/../libs/Trait_DeviceAvailability.php';
 require_once __DIR__ . '/../libs/Trait_MieleDevice.php';
+require_once __DIR__ . '/../libs/Trait_DeviceRegistration.php';
 
 class MieleFridge extends IPSModuleStrict
 {
+    use DeviceRegistration_Trait;
     use SmartLog_Trait;
     use DeviceAvailability_Trait;
     use MieleDevice_Trait;
@@ -107,6 +109,10 @@ class MieleFridge extends IPSModuleStrict
             $this->EnableAction('SuperFreezing');
         }
 
+    
+        $this->DR_Register('DevicesGenericSensor', [
+            'Reachable_VarID' => $this->GetIDForIdent('DeviceAvailable'),
+        ]);
     }
 
     protected function Miele_ProcessCustomDeviceData(array $state): void

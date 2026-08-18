@@ -6,9 +6,11 @@ require_once __DIR__ . '/../libs/Trait_SmartLog.php';
 require_once __DIR__ . '/../libs/Trait_CentralStateAware.php';
 require_once __DIR__ . '/../libs/Trait_DeviceAvailability.php';
 require_once __DIR__ . '/../libs/Trait_MieleDevice.php';
+require_once __DIR__ . '/../libs/Trait_DeviceRegistration.php';
 
 class MieleHood extends IPSModuleStrict
 {
+    use DeviceRegistration_Trait;
     use SmartLog_Trait;
     use CentralStateAware_Trait;
     use DeviceAvailability_Trait;
@@ -150,6 +152,10 @@ class MieleHood extends IPSModuleStrict
         $this->EnableAction('AmbientLight');
         $this->EnableAction('VentilationStep');
 
+    
+        $this->DR_Register('DevicesGenericSensor', [
+            'Reachable_VarID' => $this->GetIDForIdent('DeviceAvailable'),
+        ]);
     }
 
     //==========================================================================
