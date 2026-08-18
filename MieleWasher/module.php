@@ -229,7 +229,6 @@ class MieleWasher extends IPSModuleStrict
             'SUFFIX' => 'l',
             'ICON' => 'faucet-drip'
         ], 61);
-        $this->DR_Register('DevicesGenericSensor');
     }
 
     public function Destroy(): void {
@@ -258,6 +257,7 @@ class MieleWasher extends IPSModuleStrict
         if (empty($this->ReadPropertyString('DeviceID'))) {
             $this->SetStatus(104);
             return;
+        $this->DR_Register('DevicesGenericSensor');
         }
 
         IPS_SetVariableCustomProfile($this->GetIDForIdent('ProcessAction'), '');

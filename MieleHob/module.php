@@ -73,7 +73,6 @@ class MieleHob extends IPSModuleStrict
                 'ICON' => 'fire'
             ], 24 + $i);
         }
-        $this->DR_Register('DevicesGenericSensor');
     }
 
     public function Destroy(): void {
@@ -88,6 +87,7 @@ class MieleHob extends IPSModuleStrict
         if (empty($this->ReadPropertyString('DeviceID'))) {
             $this->SetStatus(104);
             return;
+        $this->DR_Register('DevicesGenericSensor');
         }
 
         IPS_SetVariableCustomProfile($this->GetIDForIdent('PowerSupply'), '');

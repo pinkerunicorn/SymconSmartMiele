@@ -113,7 +113,6 @@ class MieleHood extends IPSModuleStrict
             'ICON'         => 'filter',
             'SUFFIX'       => '%'
         ], 51);
-        $this->DR_Register('DevicesGenericSensor');
     }
 
     public function Destroy(): void {
@@ -129,6 +128,7 @@ class MieleHood extends IPSModuleStrict
         if (empty($this->ReadPropertyString('DeviceID'))) {
             $this->SetStatus(104);
             return;
+        $this->DR_Register('DevicesGenericSensor');
         }
         
         $this->SubscribeToCentralStates(['FireplaceActive']);

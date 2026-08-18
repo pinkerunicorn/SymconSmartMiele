@@ -65,7 +65,6 @@ class MieleFridge extends IPSModuleStrict
             // Variable entfernen falls vorhanden
             @$this->UnregisterVariable('SuperFreezing');
         }
-        $this->DR_Register('DevicesGenericSensor');
     }
 
     public function Destroy(): void {
@@ -80,6 +79,7 @@ class MieleFridge extends IPSModuleStrict
         if (empty($this->ReadPropertyString('DeviceID'))) {
             $this->SetStatus(104);
             return;
+        $this->DR_Register('DevicesGenericSensor');
         }
 
         IPS_SetVariableCustomProfile($this->GetIDForIdent('SuperCooling'), '');

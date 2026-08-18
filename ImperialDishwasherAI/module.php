@@ -119,7 +119,6 @@ class ImperialDishwasherAI extends IPSModuleStrict {
 
         // Vestaboard: Kurzzusammenfassung für VestaboardGenerator
         $this->RegisterVariableString('VestaboardMessage', 'Vestaboard Nachricht', ['PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION, 'ICON' => 'file-code'], 101);
-        $this->DR_Register('DevicesGenericSensor');
     }
 
     public function Destroy(): void {
@@ -193,6 +192,7 @@ class ImperialDishwasherAI extends IPSModuleStrict {
         if ($statusId) {
             IPS_SetDisabled($statusId, true);
             IPS_SetVariableCustomProfile($statusId, '');
+        $this->DR_Register('DevicesGenericSensor');
         }
 
         $powerVarID = $this->ReadPropertyInteger('PowerVariableID');

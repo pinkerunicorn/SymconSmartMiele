@@ -58,7 +58,6 @@ class MieleSplitter extends IPSModuleStrict
     {
         parent::ApplyChanges();
         $this->DA_ApplyPresentation();
-        $this->DR_Register('DevicesHealth');
 
         if (empty($this->ReadPropertyString('ClientID')) || empty($this->ReadPropertyString('Username'))) {
             $this->SetStatus(104);
@@ -67,6 +66,7 @@ class MieleSplitter extends IPSModuleStrict
             $this->SetTimerInterval('SM_TokenRefresh', 0);
             $this->DA_StopWatchdog();
             return;
+        $this->DR_Register('DevicesHealth');
         }
 
         // Start token refresh timer
