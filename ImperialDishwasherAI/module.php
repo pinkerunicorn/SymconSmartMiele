@@ -100,7 +100,7 @@ class ImperialDishwasherAI extends IPSModuleStrict {
         $this->RegisterVariableInteger('Progress', 'Fortschritt', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON'         => 'bars-progress',
-            'SUFFIX'       => '%'
+            'SUFFIX'       => ' %'
         ], 8);
 
         // Timer
@@ -176,7 +176,7 @@ class ImperialDishwasherAI extends IPSModuleStrict {
         $this->RegisterVariableInteger('Progress', 'Fortschritt', [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON'         => 'bars-progress',
-            'SUFFIX'       => '%'
+            'SUFFIX'       => ' %'
         ], 8);
 
         $statusId = @$this->GetIDForIdent('Status');
