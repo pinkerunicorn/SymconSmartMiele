@@ -111,10 +111,16 @@ class ImperialDishwasherAI extends IPSModuleStrict {
         $this->RegisterTimer('DataCollectorTimer', 0, 'IDW_CollectData($_IPS[\'TARGET\']);');
         $this->RegisterTimer('AnalysisTimer', 0, 'IDW_AnalyzeData($_IPS[\'TARGET\']);');
 
-        $this->RegisterVariableString('SessionData', 'Session Data (Intern)', '', 99);
+        $this->RegisterVariableString('SessionData', 'Session Data (Intern)', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'code'
+        ], 99);
         IPS_SetHidden($this->GetIDForIdent('SessionData'), true);
 
-        $this->RegisterVariableString('LastSessionData', 'Letzte Session Data (Intern)', '', 100);
+        $this->RegisterVariableString('LastSessionData', 'Letzte Session Data (Intern)', [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'code'
+        ], 100);
         IPS_SetHidden($this->GetIDForIdent('LastSessionData'), true);
 
         // Vestaboard: Kurzzusammenfassung für VestaboardGenerator
