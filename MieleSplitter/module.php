@@ -5,11 +5,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/../libs/Trait_SmartLog.php';
 require_once __DIR__ . '/../libs/Trait_SmartHttp.php';
 require_once __DIR__ . '/../libs/Trait_DeviceAvailability.php';
-require_once __DIR__ . '/../libs/Trait_DeviceRegistration.php';
-
 class MieleSplitter extends IPSModuleStrict
 {
-    use DeviceRegistration_Trait;
     use SmartLog_Trait;
     use SmartHttp_Trait;
     use DeviceAvailability_Trait;
@@ -66,7 +63,6 @@ class MieleSplitter extends IPSModuleStrict
             $this->SetTimerInterval('SM_TokenRefresh', 0);
             $this->DA_StopWatchdog();
             return;
-        $this->DR_Register('DevicesHealth');
         }
 
         // Start token refresh timer

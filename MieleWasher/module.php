@@ -5,11 +5,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/../libs/Trait_SmartLog.php';
 require_once __DIR__ . '/../libs/Trait_DeviceAvailability.php';
 require_once __DIR__ . '/../libs/Trait_MieleDevice.php';
-require_once __DIR__ . '/../libs/Trait_DeviceRegistration.php';
-
 class MieleWasher extends IPSModuleStrict
 {
-    use DeviceRegistration_Trait;
     use SmartLog_Trait;
     use DeviceAvailability_Trait;
     use MieleDevice_Trait;
@@ -233,8 +230,7 @@ class MieleWasher extends IPSModuleStrict
 
     public function Destroy(): void {
         parent::Destroy();
-        $this->DR_Unregister();
-    }
+        }
 
     public function ApplyChanges(): void{
         parent::ApplyChanges();
@@ -257,7 +253,6 @@ class MieleWasher extends IPSModuleStrict
         if (empty($this->ReadPropertyString('DeviceID'))) {
             $this->SetStatus(104);
             return;
-        $this->DR_Register('DevicesGenericSensor');
         }
 
         IPS_SetVariableCustomProfile($this->GetIDForIdent('ProcessAction'), '');

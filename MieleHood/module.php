@@ -6,11 +6,8 @@ require_once __DIR__ . '/../libs/Trait_SmartLog.php';
 require_once __DIR__ . '/../libs/Trait_CentralStateAware.php';
 require_once __DIR__ . '/../libs/Trait_DeviceAvailability.php';
 require_once __DIR__ . '/../libs/Trait_MieleDevice.php';
-require_once __DIR__ . '/../libs/Trait_DeviceRegistration.php';
-
 class MieleHood extends IPSModuleStrict
 {
-    use DeviceRegistration_Trait;
     use SmartLog_Trait;
     use CentralStateAware_Trait;
     use DeviceAvailability_Trait;
@@ -117,8 +114,7 @@ class MieleHood extends IPSModuleStrict
 
     public function Destroy(): void {
         parent::Destroy();
-        $this->DR_Unregister();
-    }
+        }
 
     public function ApplyChanges(): void
     {
@@ -128,7 +124,6 @@ class MieleHood extends IPSModuleStrict
         if (empty($this->ReadPropertyString('DeviceID'))) {
             $this->SetStatus(104);
             return;
-        $this->DR_Register('DevicesGenericSensor');
         }
         
         $this->SubscribeToCentralStates(['FireplaceActive']);
